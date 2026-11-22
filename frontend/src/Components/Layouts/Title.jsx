@@ -1,4 +1,3 @@
-import React from "react";
 import "../../assets/CSS/title.css";
 
 function Title(params) {
