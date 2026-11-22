@@ -17,7 +17,7 @@ function AddImageButton(params) {
   */
   const hiddenFileInput = React.useRef(null);
 
-  const handleClick = (event) => {
+  const handleClick = () => {
     hiddenFileInput.current.click();
   };
 
