@@ -1,5 +1,8 @@
 name: CI
 
+permissions:
+  contents: write
+
 on:
   push:
     branches: [main, "refactor/**"]
@@ -39,9 +42,19 @@ jobs:
           cache: npm
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci
-      - name: Report dependency audit
-        run: |
-          npm audit --json > npm-audit.json || true
-          node -e 'const report = require("./npm-audit.json"); for (const [name, item] of Object.entries(report.vulnerabilities || {})) console.log(name + ": " + item.severity + "; direct=" + item.isDirect + "; fix=" + JSON.stringify(item.fixAvailable)); console.log("Audit summary:", JSON.stringify(report.metadata && report.metadata.vulnerabilities));'
+      - name: Update vulnerable dependencies
+        run: npm audit fix
       - run: npm run lint
       - run: npm run build
+      - name: Commit dependency updates
+        if: github.ref == 'refs/heads/refactor/portfolio-ready' && github.event_name == 'push'
+        run: |
+          if git diff --quiet -- package.json package-lock.json; then
+            echo "Dependency lockfile is already up to date."
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add package.json package-lock.json
+            git commit -m "chore: update vulnerable frontend dependencies"
+            git push
+          fi
