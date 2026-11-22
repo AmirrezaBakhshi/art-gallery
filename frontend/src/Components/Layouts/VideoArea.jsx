@@ -1,4 +1,3 @@
-import React from "react";
 import "../../assets/CSS/video.css";
 
 function VideoArea(params) {
