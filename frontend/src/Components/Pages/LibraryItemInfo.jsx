@@ -6,7 +6,6 @@ import Text from "../Layouts/Text";
 import "../../assets/CSS/button.css";
 import Title from "../Layouts/Title";
 
-import Button from "../Layouts/Button";
 import ReturnButton from "../Layouts/ReturnButton";
 import PlayAudioButton from "../Layouts/PlayAudioButton";
 import VideoArea from "../Layouts/VideoArea";
@@ -68,7 +67,6 @@ function LibraryItemInfo() {
 
           <div style={{ marginTop: "70px" }} />
 
-          {/* <Button text={t("Done")} path="/library" /> */}
 
           <div style={{ marginTop: "50px" }} />
         </>
