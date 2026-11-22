@@ -1,4 +1,3 @@
-import React from "react";
 import "../../assets/CSS/image.css";
 
 function Image(params) {
