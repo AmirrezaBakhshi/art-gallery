@@ -4,7 +4,7 @@ function VideoArea(params) {
   return (
     <video controls className="video">
       <source src={params.src} type="video/mp4" />
-      Sorry, your browser doesn't support videos.
+      Sorry, your browser does not support videos.
     </video>
   );
 }
