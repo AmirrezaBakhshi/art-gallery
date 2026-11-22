@@ -1,4 +1,3 @@
-import React from "react";
 import "../../assets/CSS/button.css";
 import ReactLoading from "react-loading";
 import Text from "./Text";

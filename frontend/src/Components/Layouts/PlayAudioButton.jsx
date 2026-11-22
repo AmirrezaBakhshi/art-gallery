@@ -1,14 +1,13 @@
-import React, { useState, useRef } from "react";
+import { useState, useRef } from "react";
 import "../../assets/CSS/button.css";
 
 import { useTranslation } from 'react-i18next';
 
 function PlayAudioButton(params) {
-  //const [buttonText, setButtonText] = useState(params.text);
   const [isPlay, setIsPlay] = useState(false);
   const myRef = useRef(new Audio(params.src));
 
-  const {t, i18n} = useTranslation(['iteminfo']);
+  const {t} = useTranslation(['iteminfo']);
 
   const playOrstop = () => {
     if (params.src) {

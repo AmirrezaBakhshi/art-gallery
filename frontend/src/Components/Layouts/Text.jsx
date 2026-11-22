@@ -1,4 +1,3 @@
-import React from "react";
 import "../../assets/CSS/text.css";
 
 function Text(params) {

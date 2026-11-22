@@ -1,20 +1,77 @@
+from django.contrib.auth.hashers import make_password
 from rest_framework import serializers
-from .models import *
+
+from .models import Gallary, Item, TargetFile, contains_number
+
 
 class ItemSerializer(serializers.ModelSerializer):
+    gallary_id = serializers.IntegerField(read_only=True)
+
     class Meta:
         model = Item
-        fields = ('id', 'gallary_id','target_index', 'target_image', 'target_data', 'title', 'description', 'audio', 'audio_name', 'augmented_video', 'extra_video')
+        fields = (
+            "id", "gallary_id", "target_index", "target_image", "target_data",
+            "title", "description", "audio", "audio_name",
+            "augmented_video", "extra_video",
+        )
+        read_only_fields = ("id", "gallary_id")
+
 
 class GallarySerializer(serializers.ModelSerializer):
-    # items = ItemSerializer(many=True)
+    password = serializers.CharField(write_only=True, required=False, min_length=8)
+
     class Meta:
         model = Gallary
-        fields = ('id', 'username', 'password', 'name', 'email', 'image', 'address', 'contact', 'description')
+        fields = (
+            "id", "username", "password", "name", "email", "image",
+            "address", "contact", "description",
+        )
+        read_only_fields = ("id", "username", "email")
+
+    def validate_password(self, value):
+        if not contains_number(value):
+            raise serializers.ValidationError("Your password must contain at least one digit.")
+        return value
+
+    def create(self, validated_data):
+        raw_password = validated_data.pop("password", None)
+        if not raw_password:
+            raise serializers.ValidationError({"password": "A password is required."})
+        validated_data["password"] = make_password(raw_password)
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        raw_password = validated_data.pop("password", None)
+        if raw_password:
+            instance.password = make_password(raw_password)
+        return super().update(instance, validated_data)
+
+
+class SignupSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True, min_length=8)
+
+    class Meta:
+        model = Gallary
+        fields = ("id", "username", "password", "name", "email", "image",
+                  "address", "contact", "description")
+        read_only_fields = ("id",)
+
+    def validate_password(self, value):
+        if not contains_number(value):
+            raise serializers.ValidationError("Your password must contain at least one digit.")
+        return value
+
+    def create(self, validated_data):
+        from secrets import token_urlsafe
+        validated_data["password"] = make_password(validated_data["password"])
+        validated_data["api_token"] = token_urlsafe(32)
+        return Gallary.objects.create(**validated_data)
+
 
 class TargetFileSerializer(serializers.ModelSerializer):
+    gallary_id = serializers.IntegerField(read_only=True)
+
     class Meta:
         model = TargetFile
-        fields = ('id', 'file')
-
- 
+        fields = ("id", "gallary_id", "file")
+        read_only_fields = ("id",)

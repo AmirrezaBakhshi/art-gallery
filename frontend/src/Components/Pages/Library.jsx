@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
+import { apiFetch, readApiResponse } from "../../api";
 import ReturnButton from "../Layouts/ReturnButton";
 import ItemCard from "../Layouts/ItemCard";
 
@@ -9,32 +10,22 @@ import Link from "../Layouts/Link";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 
-function Library(params) {
+function Library() {
   const orientation = useScreenOrientation();
 
   const gallary = JSON.parse(localStorage.getItem("user"));
   const navigate = useNavigate();
 
-  const [allItems, setAllItems] = useState([]);
   const [itemsList, setItemsList] = useState([]);
 
-  const { t, i18n } = useTranslation(["iteminfo"]);
+  const { t } = useTranslation(["iteminfo"]);
 
   useEffect(() => {
-    const arr = [];
-    fetch("http://127.0.0.1:8000/api/items/")
-      .then((res) => res.json())
-      .then((data) => {
-        setAllItems(data);
-        for (const item of data) {
-          if (item.gallary_id == gallary.id) {
-            arr.push(item);
-            setItemsList(arr);
-          }
-        }
-      })
+    apiFetch("/api/items/")
+      .then(readApiResponse)
+      .then((data) => setItemsList(data.filter((item) => item.gallary_id === gallary.id)))
       .catch((err) => console.error(err));
-  }, []);
+  }, [gallary.id]);
 
   return (
     <>
@@ -48,6 +39,7 @@ function Library(params) {
             <div>
               {itemsList.map((item) => (
                 <ItemCard
+                  key={item.id}
                   image={item.target_image}
                   title={item.title}
                   onClick={() => {

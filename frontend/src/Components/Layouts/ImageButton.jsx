@@ -1,23 +1,30 @@
-import React from "react";
+/* eslint-disable react/prop-types */
 import { useNavigate } from "react-router-dom";
 import "../../assets/CSS/title.css";
 
-function ImageButton(params) {
+function ImageButton({ image, text, path }) {
   const navigate = useNavigate();
-  const handleClick = () => {
-    navigate(params.path);
-  };
+
   return (
-    <>
-      <div style={{ display: "inline-block", alignItems: "center" }}>
-        <img
-          style={{ width: "85%" }}
-          src={params.image}
-          onClick={handleClick}
-        />
-        <div className="title" style={{marginLeft: "-12px"}}>{params.text}</div>
-      </div>
-    </>
+    <button
+      type="button"
+      onClick={() => path && navigate(path)}
+      disabled={!path}
+      aria-label={text}
+      style={{
+        display: "inline-flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: "8px",
+        border: 0,
+        background: "transparent",
+        cursor: path ? "pointer" : "default",
+        padding: "8px",
+      }}
+    >
+      <img style={{ width: "85%" }} src={image} alt="" />
+      <span className="title">{text}</span>
+    </button>
   );
 }
 

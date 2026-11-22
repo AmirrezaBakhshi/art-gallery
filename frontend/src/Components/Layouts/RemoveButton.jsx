@@ -2,14 +2,13 @@
 
 //  COMMMENDTED
 
-import React from "react";
 import "../../assets/CSS/button.css";
 
 import { useTranslation } from 'react-i18next';
 
 function RemoveButton(params) {
 
-  const {t, i18n} = useTranslation(['gallaryinfo']);
+  const {t} = useTranslation(['gallaryinfo']);
 
   const handleClick = () => {
     params.stateChanger(null);

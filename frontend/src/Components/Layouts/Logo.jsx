@@ -1,5 +1,4 @@
 import apgal_logo from "../../assets/Media/apgal.png";
-import React from "react";
 
 function Logo(params) {
   const mystyle = {

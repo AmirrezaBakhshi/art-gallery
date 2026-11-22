@@ -1,10 +1,11 @@
+import { useState, useEffect } from "react";
+import { apiFetch, readApiResponse } from "../../api";
 import Image from "../Layouts/Image";
 import Link from "../Layouts/Link";
 import Text from "../Layouts/Text";
 import "../../assets/CSS/button.css";
 import Title from "../Layouts/Title";
 
-import React, { useState, useEffect } from "react";
 import ReturnButton from "../Layouts/ReturnButton";
 
 import { useTranslation } from "react-i18next";
@@ -17,17 +18,17 @@ function MuseumInfo() {
   const [gallary, setGallary] = useState();
   const gallary_id = localStorage.getItem("gallary_id");
 
-  const { t, i18n } = useTranslation(["gallaryinfo"]);
+  const { t } = useTranslation(["gallaryinfo"]);
   const orientation = useScreenOrientation();
 
   useEffect(() => {
-    fetch(`http://127.0.0.1:8000/api/gallaries/${gallary_id}/`)
-      .then((res) => res.json())
+    apiFetch(`/api/gallaries/${gallary_id}/`)
+      .then(readApiResponse)
       .then((data) => {
         setGallary(data);
       })
       .catch((err) => console.error(err));
-  }, []);
+  }, [gallary_id]);
 
   if (!gallary) {
     return <div>Loading...</div>;

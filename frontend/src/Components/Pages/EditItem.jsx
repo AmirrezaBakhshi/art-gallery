@@ -1,8 +1,9 @@
+import { useState } from "react";
+import { apiFetch, readApiResponse } from "../../api";
 import Button from "../Layouts/Button";
 import Input from "../Layouts/Input";
 import ReturnButton from "../Layouts/ReturnButton";
 
-import React, { useState, useEffect } from "react";
 import AddFileButton from "../Layouts/AddFileButton";
 import TextArea from "../Layouts/TextArea";
 import Text from "../Layouts/Text";
@@ -11,28 +12,28 @@ import RemoveButton from "../Layouts/RemoveButton";
 
 import { useTranslation } from "react-i18next";
 import VideoArea from "../Layouts/VideoArea";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import PlayAudioButton from "../Layouts/PlayAudioButton";
 
 function EditItem() {
-  const item = JSON.parse(localStorage.getItem("item"));
-  const { t, i18n } = useTranslation(["additem"]);
-
+  const item = JSON.parse(localStorage.getItem("item") || "null");
+  const { t } = useTranslation(["additem"]);
   const navigate = useNavigate();
 
-  const [title, setTitle] = useState(item.title);
-  const [description, setDescription] = useState(item.description);
-
-  const [audio, setAudio] = useState(item.audio);
-  const [playableAudio, setPlayableAudio] = useState(item.audio);
+  const [title, setTitle] = useState(item?.title || "");
+  const [description, setDescription] = useState(item?.description || "");
+  const [audio, setAudio] = useState(item?.audio || null);
+  const [playableAudio, setPlayableAudio] = useState(item?.audio || null);
   const [augmentedVideoOrImage, setAugmentedVideoOrImage] = useState("");
-  const [extraVideo, setExtraVideo] = useState(item.extra_video);
-  const [shownVideo, setShownVideo] = useState(item.extra_video);
-  const [audioName, setAudioName] = useState(item.audio_name);
+  const [extraVideo, setExtraVideo] = useState(item?.extra_video || null);
+  const [shownVideo, setShownVideo] = useState(item?.extra_video || null);
+  const [audioName, setAudioName] = useState(item?.audio_name || "");
   const [audioChanged, setAudioChanged] = useState(false);
   const [videoChanged, setVideoChanged] = useState(false);
 
   const [error, setError] = useState("");
+
+  if (!item) return <Navigate to="/library" replace />;
 
   const handleEditItem = async () => {
     if (title == "") {
@@ -93,25 +94,31 @@ function EditItem() {
         data.append("extra_video", "");
       }
 
-      fetch(`http://127.0.0.1:8000/api/items/${item.id}/`, {
+      apiFetch(`/api/items/${item.id}/`, {
         method: "PUT",
         body: data,
       })
-        .then((res) => res.json())
-        .then((data) => {
-          console.log("done");
-          navigate("/library");
-        })
-        .catch((err) => console.error(err));
+        .then(readApiResponse)
+        .then(() => navigate("/library"))
+        .catch((err) => setError(err.message));
     }
   };
 
-  const handleDeleteItem = async () => {};
+  const handleDeleteItem = async () => {
+    if (!window.confirm(t("Delete this item permanently?"))) return;
+    try {
+      const response = await apiFetch(`/api/items/${item.id}/`, { method: "DELETE" });
+      if (!response.ok) throw new Error(`Delete failed (${response.status}).`);
+      navigate("/library");
+    } catch (err) {
+      setError(err.message);
+    }
+  };
 
   const videoChange = (obj) => {
     setExtraVideo(obj);
-    if (obj != null) setShownVideo(URL.createObjectURL(obj));
     setVideoChanged(true);
+    if (obj != null) setShownVideo(URL.createObjectURL(obj));
   };
 
   const audioChange = (obj) => {
@@ -193,8 +200,7 @@ function EditItem() {
 
         <Button text={t("Done")} stateChanger={handleEditItem} />
 
-        {/* TODO : DELETE ITEM / NEXT VERSION */}
-        {/* <Button text={t("Delete Item")} stateChanger={handleDeleteItem} /> */}
+        <Button text={t("Delete Item")} stateChanger={handleDeleteItem} />
 
         <div style={{ marginTop: "5%" }}></div>
       </div>

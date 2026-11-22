@@ -1,9 +1,10 @@
+import { useState } from "react";
+import { apiFetch, readApiResponse } from "../../api";
 import Button from "../Layouts/Button";
 import Input from "../Layouts/Input";
 import ReturnButton from "../Layouts/ReturnButton";
 import Link from "../Layouts/Link";
 
-import React, { useState, useEffect } from "react";
 import AddFileButton from "../Layouts/AddFileButton";
 import TextArea from "../Layouts/TextArea";
 import AddImageButton from "../Layouts/AddImageButton";
@@ -21,10 +22,8 @@ import useScreenOrientation from "react-hook-screen-orientation";
 import Landscape from "./Landscape";
 
 function AddItem() {
-  const gallary = JSON.parse(localStorage.getItem("user"));
   const navigate = useNavigate();
 
-  const [items, setItems] = useState([]);
   const [image, setImage] = useState(null);
   const [shownImage, setShownImage] = useState(null);
   const [title, setTitle] = useState("");
@@ -39,23 +38,9 @@ function AddItem() {
 
   const [error, setError] = useState("");
 
-  const [margin, setMargin] = useState("100px");
 
-  const { t, i18n } = useTranslation(["additem"]);
+  const { t } = useTranslation(["additem"]);
   const orientation = useScreenOrientation();
-
-  const fetchItems = () => {
-    fetch("http://127.0.0.1:8000/api/items/")
-      .then((res) => res.json())
-      .then((data) => {
-        setItems(data);
-      })
-      .catch((err) => console.error(err));
-  };
-
-  useEffect(() => {
-    fetchItems();
-  }, []);
 
   const handleAddItem = async () => {
     if (title == "") {
@@ -69,15 +54,15 @@ function AddItem() {
     } else {
       setPending(true);
       setError("");
-      fetchItems();
-
+      try {
+      const currentItems = await readApiResponse(await apiFetch("/api/items/"));
+      const nextIndex = currentItems.length;
       const data = new FormData();
 
-      const new_image = new File([image], items.length + ".jpg");
+      const new_image = new File([image], `${nextIndex}.jpg`);
 
-      data.append("gallary_id", gallary.id);
       data.append("target_image", new_image);
-      data.append("target_index", items.length);
+      data.append("target_index", nextIndex);
       data.append("title", title);
       data.append("description", description);
       if (audio != null)
@@ -92,20 +77,17 @@ function AddItem() {
         data.append("extra_video", "");
       }
 
-      fetch("http://127.0.0.1:8000/api/items/", {
+      await readApiResponse(await apiFetch("/api/items/", {
         method: "POST",
         body: data,
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          localStorage.setItem("stop", false)
-          window.location.replace(
-            `http://localhost:5173/dashboard`
-            //`http://172.20.10.10:5502/scan-compile/compile/index.html`
-          );
-          //navigate("/dashboard");
-        })
-        .catch((err) => console.error(err));
+      }));
+      localStorage.setItem("stop", false);
+      navigate("/dashboard");
+      } catch (err) {
+        setError(err.message || t("Unable to save artwork."));
+      } finally {
+        setPending(false);
+      }
     }
   };
 

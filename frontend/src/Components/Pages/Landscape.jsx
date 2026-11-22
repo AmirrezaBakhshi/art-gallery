@@ -1,9 +1,8 @@
-import React from "react";
 import "../../assets/CSS/button.css";
 import Link from "../Layouts/Link";
 import rotate_image from "../../assets/Media/rotate.png";
 
-function Landscape(params) {
+function Landscape() {
   return (
     <>
       <Link marginTop={"12%"} text="Please rotate your mobile phone!" />

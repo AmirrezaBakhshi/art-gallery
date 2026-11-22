@@ -1,9 +1,10 @@
+import { useState } from "react";
+import { apiFetch, readApiResponse } from "../../api";
 import AddImageButton from "../Layouts/AddImageButton";
 import Title from "../Layouts/Title";
 import Input from "../Layouts/Input";
 import "../../assets/CSS/button.css";
 
-import React, { useState } from "react";
 import TextArea from "../Layouts/TextArea";
 import Button from "../Layouts/Button";
 import { useNavigate } from "react-router-dom";
@@ -24,7 +25,7 @@ function AdditionalInfo() {
   const [address, setAddress] = useState("");
   const [contact, setContact] = useState("");
 
-  const { t, i18n } = useTranslation(["gallaryinfo"]);
+  const { t } = useTranslation(["gallaryinfo"]);
   const orientation = useScreenOrientation();
 
   const navigate = useNavigate();  //edirecting the user to another page after form submission
@@ -35,7 +36,6 @@ function AdditionalInfo() {
     data.append("name", gallary.name); //Creates a new form data object to send data to a server.
     data.append("username", gallary.username);
     data.append("email", gallary.email);
-    data.append("password", gallary.password);
     if (image != null) { //If an image has been selected (image is not null), it is added to the form data. Otherwise, an empty string is appended.
       data.append("image", image);
     } else {
@@ -45,11 +45,11 @@ function AdditionalInfo() {
     data.append("contact", contact);
     data.append("description", description);
 
-    fetch(`http://127.0.0.1:8000/api/gallaries/${gallary.id}/`, { //A fetch request is made to the server (PUT method to update an existing gallery).
+    apiFetch(`/api/gallaries/${gallary.id}/`, { //A fetch request is made to the server (PUT method to update an existing gallery).
       method: "PUT",
       body: data,
     })
-      .then((res) => res.json()) //If the request is successful, the response (updated user data) is saved back into localStorage and the user is navigated to the /dashboard route.
+      .then(readApiResponse)
       .then((data) => {
         localStorage.setItem("user", JSON.stringify(data));
         navigate("/dashboard");

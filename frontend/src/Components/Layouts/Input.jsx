@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import "../../assets/CSS/input.css";
 import eye_icon from "../../assets/Media/eye-icon.png";
 
@@ -13,12 +13,12 @@ function Input(params) {
     if (params.type == "password") {
       setIsEyeVisible(true);
     }
-  }, []);
+  }, [params.type]);
 
   function handleChange(event) {
     params.stateChanger(event.target.value);
   }
-  function toggleVisibility(event) {
+  function toggleVisibility() {
     if (type == "password") {
       setType("text");
     } else {
