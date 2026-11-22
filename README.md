@@ -11,7 +11,7 @@ ArtGallery is a React + Django REST Framework application for galleries and muse
 ## Requirements
 
 - Python 3.10+
-- Node.js 18+
+- Node.js 22+
 - npm
 
 ## Local development
