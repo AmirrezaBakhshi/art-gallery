@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import "../../assets/CSS/input.css";
 import eye_icon from "../../assets/Media/eye-icon.png";
 
