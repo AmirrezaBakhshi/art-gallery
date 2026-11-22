@@ -48,6 +48,7 @@ jobs:
         run: |
           npm pkg set 'overrides.@eslint/plugin-kit=^0.3.4'
           npm install
+          npm audit fix
       - name: Verify dependency audit
         run: npm audit
       - run: npm run lint
