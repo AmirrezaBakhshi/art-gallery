@@ -13,7 +13,7 @@ function Input(params) {
     if (params.type == "password") {
       setIsEyeVisible(true);
     }
-  }, []);
+  }, [params.type]);
 
   function handleChange(event) {
     params.stateChanger(event.target.value);
