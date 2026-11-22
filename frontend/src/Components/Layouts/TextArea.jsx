@@ -1,4 +1,3 @@
-import React from "react";
 import "../../assets/CSS/input.css";
 
 function TextArea(params) {
