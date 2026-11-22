@@ -17,16 +17,13 @@ function Dashboard() {
   parses it into a JavaScript object.
    The data should include properties like name, image, and other user-related info.*/
   const gallary = JSON.parse(localStorage.getItem("user") || "null");
+  const { t } = useTranslation(["dashboard"]);
+  const orientation = useScreenOrientation();
+
   if (!gallary) {
     window.location.replace("/login");
     return null;
   }
-
-  //useTranslation(["dashboard"]): This hook provides access to the t function,
-  // which is used to translate strings based on the current language.
-  // It also gives access to the i18n instance, although it's not used here.
-  const { t } = useTranslation(["dashboard"]);
-  const orientation = useScreenOrientation(); 
   /*//orientation: This variable holds the current screen orientation (either "portrait" or "landscape").
   The useScreenOrientation hook monitors the device's
   orientation and returns a value like "landscape-primary",
