@@ -18,7 +18,7 @@ function Input(params) {
   function handleChange(event) {
     params.stateChanger(event.target.value);
   }
-  function toggleVisibility(event) {
+  function toggleVisibility() {
     if (type == "password") {
       setType("text");
     } else {
