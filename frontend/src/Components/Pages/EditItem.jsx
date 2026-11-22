@@ -29,6 +29,7 @@ function EditItem() {
   const [shownVideo, setShownVideo] = useState(item?.extra_video || null);
   const [audioName, setAudioName] = useState(item?.audio_name || "");
   const [audioChanged, setAudioChanged] = useState(false);
+  const [videoChanged, setVideoChanged] = useState(false);
 
   const [error, setError] = useState("");
 
@@ -116,6 +117,7 @@ function EditItem() {
 
   const videoChange = (obj) => {
     setExtraVideo(obj);
+    setVideoChanged(true);
     if (obj != null) setShownVideo(URL.createObjectURL(obj));
   };
 
