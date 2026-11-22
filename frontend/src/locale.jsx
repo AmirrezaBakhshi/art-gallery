@@ -7,7 +7,7 @@ import i18n from 'i18next';
 // i18next with React effectively, allowing React
 // components to access translation capabilities.
 import { initReactI18next } from 'react-i18next';
-import TranslationsLocale from './Assets/Translation/translations.locale';
+import TranslationsLocale from './assets/Translation/translations.locale';
 
 i18n
   .use(initReactI18next) // pass the i18n instance to react-i18next.

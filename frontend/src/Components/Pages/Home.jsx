@@ -1,4 +1,3 @@
-import React, { useState } from "react";
 import Logo from "../Layouts/Logo";
 import Button from "../Layouts/Button";
 import Text from "../Layouts/Text";
@@ -14,7 +13,7 @@ import ReturnButton from "../Layouts/ReturnButton";
 import Landscape from "./Landscape";
 
 function Home() {
-  const { t, i18n } = useTranslation(["home"]);
+  const { t } = useTranslation(["home"]);
   const orientation = useScreenOrientation();
 
   return (
@@ -27,9 +26,9 @@ function Home() {
           <ReturnButton notHasReturn={true} />
           <div style={{ alignItems: "center" }}>
             <Logo width={100} />
-            {/* <Button text={t("scan")} redirectPath={"http://127.0.0.1:8080"} /> */}
-            {/* <Button text={t("scan")} redirectPath={"http://172.20.10.10:5502/scan-compile/scan/index.html"} /> */}
-            <Button text={t("scan")} redirectPath={"http://172.20.10.10:5502/scan-compile/scan/index.html"} />
+            {import.meta.env.VITE_SCANNER_URL ? (
+              <Button text={t("scan")} redirectPath={import.meta.env.VITE_SCANNER_URL} />
+            ) : null}
             <Text
               marginTop={"50px"}
               text={t("Do you own a museum / gallary?")}
@@ -49,7 +48,7 @@ function Home() {
               text={t("About Us")}
               path="/aboutus"
             />
-            <ImageButton image={how_to_img} text={t("How to Use")} />
+            <ImageButton image={how_to_img} text={t("How to Use")} path="/how-to-use" />
           </div>
           <div style={{ marginTop: "50px" }}></div>
         </>

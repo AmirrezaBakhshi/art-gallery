@@ -1,25 +1,16 @@
-import React, { useEffect, useState } from "react";
-import "../../assets/CSS/itemCard.css";
 import Text from "./Text";
 import Image from "./Image";
+import "../../assets/CSS/itemCard.css";
 
 function ItemCard(params) {
-  const [title, setTitle] = useState(params.title);
-
-  useEffect(() => {
-    if (title.length > 13)
-      setTitle("..." + title.substr(0, 13))
-  }, []);
+  const title = params.title.length > 13 ? `...${params.title.substring(0, 13)}` : params.title;
   return (
-    <>
-      <div className="card" onClick={params.onClick}>
-        <Image width="37%" height="90px" left="2%" src={params.image} />
-
-        <div style={{ marginLeft: "40%", marginTop: "-75px" }}>
-          <Text text={title} />
-        </div>
+    <button type="button" className="card" onClick={params.onClick} aria-label={`Edit ${params.title}`}>
+      <Image width="37%" height="90px" left="2%" src={params.image} />
+      <div style={{ marginLeft: "40%", marginTop: "-75px" }}>
+        <Text text={title} />
       </div>
-    </>
+    </button>
   );
 }
 

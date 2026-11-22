@@ -1,8 +1,24 @@
-# React + Vite
+# ArtGallery frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React 18 application powered by Vite.
 
-Currently, two official plugins are available:
+## Commands
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+```bash
+npm install
+npm run dev
+npm run lint
+npm run build
+```
+
+## Environment
+
+Create `.env` when the API is not available at its local default:
+
+```dotenv
+VITE_API_BASE_URL=http://localhost:8000
+# Optional separately deployed scanner:
+# VITE_SCANNER_URL=https://scanner.example.com
+```
+
+The shared API client in `src/api.js` adds the bearer token to authenticated requests and normalizes the API base URL.

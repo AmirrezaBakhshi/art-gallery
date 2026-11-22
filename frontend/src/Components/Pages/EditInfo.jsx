@@ -1,7 +1,8 @@
+import { useState, useEffect } from "react";
+import { apiFetch, readApiResponse } from "../../api";
 import Input from "../Layouts/Input";
 import "../../assets/CSS/button.css";
 
-import React, { useState, useEffect } from "react";
 import TextArea from "../Layouts/TextArea";
 import Button from "../Layouts/Button";
 import AddImageButton from "../Layouts/AddImageButton";
@@ -16,48 +17,37 @@ import RemoveButton from "../Layouts/RemoveButton";
 import useScreenOrientation from "react-hook-screen-orientation";
 import Landscape from "./Landscape";
 
+const toDataURL = (url) =>
+  fetch(url)
+    .then((response) => {
+      if (!response.ok) throw new Error(`Image request failed (${response.status}).`);
+      return response.blob();
+    })
+    .then((blob) => new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    }));
+
+function dataURLtoFile(dataurl, filename) {
+  const [header, encoded] = dataurl.split(",");
+  const mime = header.match(/:(.*?);/)[1];
+  const binary = atob(encoded);
+  const bytes = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
+  return new File([bytes], filename, { type: mime });
+}
+
 function EditInfo() {
   const gallary = JSON.parse(localStorage.getItem("user"));
 
-  const { t, i18n } = useTranslation(["gallaryinfo"]);
+  const { t } = useTranslation(["gallaryinfo"]);
   const orientation = useScreenOrientation();
 
   const navigate = useNavigate();
 
   const [error, setError] = useState("");
-
-  const toDataURL = (url) =>
-    fetch(url)
-      .then((response) => response.blob())
-      .then(
-        (blob) =>
-          new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onloadend = () => resolve(reader.result);
-            reader.onerror = reject;
-            reader.readAsDataURL(blob);
-          })
-      );
-
-  function dataURLtoFile(dataurl, filename) {
-    var arr = dataurl.split(","),
-      mime = arr[0].match(/:(.*?);/)[1],
-      bstr = atob(arr[1]),
-      n = bstr.length,
-      u8arr = new Uint8Array(n);
-    while (n--) {
-      u8arr[n] = bstr.charCodeAt(n);
-    }
-    return new File([u8arr], filename, { type: mime });
-  }
-
-  useEffect(() => {
-    if (gallary.image != null) {
-      toDataURL(gallary.image).then((dataUrl) => {
-        setImage(dataURLtoFile(dataUrl, "imageName.jpg"));
-      });
-    }
-  }, []);
 
   const [image, setImage] = useState(gallary.image);
   const [shownImage, setShownImage] = useState(gallary.image);
@@ -65,14 +55,20 @@ function EditInfo() {
   const [description, setDescription] = useState(gallary.description);
   const [contact, setContact] = useState(gallary.contact);
   const [address, setAddress] = useState(gallary.address);
-  const [password, setPassword] = useState(gallary.password);
+
+  useEffect(() => {
+    if (gallary.image != null) {
+      toDataURL(gallary.image).then((dataUrl) => {
+        setImage(dataURLtoFile(dataUrl, "imageName.jpg"));
+      });
+    }
+  }, [gallary.image]);
 
   const handleEdit = async () => {
     const data = new FormData();
     data.append("name", name);
     data.append("username", gallary.username);
     data.append("email", gallary.email);
-    data.append("password", password);
 
     if (image != null) {
       data.append("image", image);
@@ -83,16 +79,16 @@ function EditInfo() {
     data.append("contact", contact);
     data.append("description", description);
 
-    fetch(`http://172.20.10.10:8000/api/gallaries/${gallary.id}/`, {
+    apiFetch(`/api/gallaries/${gallary.id}/`, {
       method: "PUT",
       body: data,
     })
-      .then((res) => res.json())
+      .then(readApiResponse)
       .then((data) => {
         localStorage.setItem("user", JSON.stringify(data));
         navigate("/dashboard");
       })
-      .catch((err) => console.error(err));
+      .catch((err) => setError(err.message));
   };
 
   const imageChange = (obj) => {
@@ -151,11 +147,6 @@ function EditInfo() {
             text={t("address")}
             stateChanger={setAddress}
             initText={address}
-          />
-          <Input
-            text={t("password")}
-            stateChanger={setPassword}
-            initText={password}
           />
           {error != "" && (
             <Text marginTop={"25px"} color={"red-text"} text={error} />

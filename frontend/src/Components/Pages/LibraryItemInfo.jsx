@@ -1,10 +1,11 @@
+import { useEffect, useState } from "react";
+import { apiFetch, readApiResponse } from "../../api";
 import Image from "../Layouts/Image";
 import Link from "../Layouts/Link";
 import Text from "../Layouts/Text";
 import "../../assets/CSS/button.css";
 import Title from "../Layouts/Title";
 
-import React, { useEffect, useState } from "react";
 import Button from "../Layouts/Button";
 import ReturnButton from "../Layouts/ReturnButton";
 import PlayAudioButton from "../Layouts/PlayAudioButton";
@@ -18,17 +19,15 @@ import Landscape from "./Landscape";
 
 function LibraryItemInfo() {
   const { index } = useParams();
-  const [items, setItems] = useState([]);
   const [item, setItem] = useState();
 
-  const { t, i18n } = useTranslation(["iteminfo"]);
+  const { t } = useTranslation(["iteminfo"]);
   const orientation = useScreenOrientation();
 
   useEffect(() => {
-    fetch("http://127.0.0.1:8000/api/items/")
-      .then((res) => res.json())
+    apiFetch("/api/items/")
+      .then(readApiResponse)
       .then((data) => {
-        setItems(data);
         for (const i of data) {
           if (i.target_index == index) {
             setItem(i);
@@ -38,7 +37,7 @@ function LibraryItemInfo() {
         }
       })
       .catch((err) => console.error(err));
-  }, []);
+  }, [index]);
 
   if (!item) {
     return <div>{t("Loading...")}</div>;
