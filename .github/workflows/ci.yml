@@ -44,8 +44,12 @@ jobs:
       - run: npm ci
       - name: Upgrade vulnerable major dependencies
         run: npm install vite@^8.3.8 @vitejs/plugin-react@latest react-router-dom@^7.18.6
-      - name: Update vulnerable transitive dependencies
-        run: npm audit fix
+      - name: Pin patched ESLint parser dependency
+        run: |
+          npm pkg set 'overrides.@eslint/plugin-kit=^0.3.4'
+          npm install
+      - name: Verify dependency audit
+        run: npm audit
       - run: npm run lint
       - run: npm run build
       - name: Commit dependency updates
