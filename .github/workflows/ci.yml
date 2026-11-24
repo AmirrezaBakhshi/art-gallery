@@ -100,14 +100,13 @@ jobs:
         run: npm run dev -- --host 127.0.0.1 > /tmp/vite.log 2>&1 &
       - name: Run browser end-to-end tests
         run: python frontend/e2e/test_gallery_workflow.py
-      - name: Trim walkthrough and generate GIF
+      - name: Trim walkthrough before owner-only contact details
         if: success() && env.CAPTURE_SHOWCASE == '1'
         run: |
           PLAYWRIGHT_FFMPEG="$(find "$HOME/.cache/ms-playwright" -type f -name 'ffmpeg-linux' -print -quit)"
           test -n "$PLAYWRIGHT_FFMPEG"
-          "$PLAYWRIGHT_FFMPEG" -y -i docs/showcase/videos/artgallery-walkthrough.webm -t 2.8 -c:v libvpx-vp9 -crf 35 -b:v 0 /tmp/artgallery-walkthrough-trimmed.webm
+          "$PLAYWRIGHT_FFMPEG" -y -i docs/showcase/videos/artgallery-walkthrough.webm -t 2.8 -c:v copy /tmp/artgallery-walkthrough-trimmed.webm
           mv /tmp/artgallery-walkthrough-trimmed.webm docs/showcase/videos/artgallery-walkthrough.webm
-          "$PLAYWRIGHT_FFMPEG" -y -i docs/showcase/videos/artgallery-walkthrough.webm -vf "fps=6,scale=420:-1:flags=lanczos" -loop 0 docs/showcase/videos/artgallery-walkthrough.gif
       - name: Commit showcase assets to the PR branch
         if: success() && env.CAPTURE_SHOWCASE == '1'
         run: |
