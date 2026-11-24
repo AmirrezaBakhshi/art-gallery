@@ -13,6 +13,7 @@ This showcase is captured from the running React and Django application by the P
 | [Artwork editor](screenshots/05-artwork-editor.png) | Adding artwork and its image |
 | [Collection](screenshots/06-gallery-library.png) | Owner's artwork library |
 | [Public artwork](screenshots/07-public-artwork.png) | Visitor-facing artwork detail |
+| [Public gallery profile](screenshots/08-public-gallery-profile.png) | Public gallery information with private contact fields hidden |
 
 ## Walkthrough
 
