@@ -94,11 +94,6 @@ jobs:
         run: npm run dev -- --host 127.0.0.1 > /tmp/vite.log 2>&1 &
       - name: Run browser end-to-end tests
         run: python frontend/e2e/test_gallery_workflow.py
-      - name: Convert showcase walkthrough to GIF
-        if: success() && env.CAPTURE_SHOWCASE == '1'
-        run: |
-          mkdir -p docs/showcase
-          ffmpeg -y -i docs/showcase/videos/artgallery-walkthrough.webm -vf "fps=7,scale=420:-1:flags=lanczos" -loop 0 docs/showcase/artgallery-walkthrough.gif
       - name: Upload visual showcase
         if: success() && env.CAPTURE_SHOWCASE == '1'
         uses: actions/upload-artifact@v4
