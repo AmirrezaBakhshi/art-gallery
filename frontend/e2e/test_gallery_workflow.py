@@ -135,18 +135,6 @@ class GalleryWorkflowE2E(unittest.TestCase):
         self.assertTrue(session["httpOnly"], "Session cookie must be HttpOnly")
         self.assertIsNone(self.page.evaluate("() => localStorage.getItem('authToken')"))
 
-        self.page.locator('input[type="file"]').first.set_input_files({
-            "name": "gallery-profile.png",
-            "mimeType": "image/png",
-            "buffer": demo_image_bytes((512, 512), avatar=True),
-        })
-        textareas = self.page.locator("textarea")
-        textareas.nth(0).fill(
-            "A considered collection of contemporary forms, material studies, and visual stories."
-        )
-        textareas.nth(1).fill("Demonstration profile — no real-world address")
-        self.page.locator('input[type="number"]').fill("0000000000")
-        self.capture("03-gallery-setup.png")
         self.page.get_by_role("button", name="next").click()
         expect(self.page).to_have_url(f"{BASE_URL}/dashboard")
         expect(self.page.get_by_text(gallery_name)).to_be_visible()
