@@ -304,6 +304,52 @@ class GalleryAuthenticationTests(APITestCase):
         self.assertEqual(already_hashed.api_token, "a" * 64)
         legacy.save.assert_called_once_with(update_fields=["password", "api_token"])
 
+    def test_public_gallery_responses_hide_private_contact_fields(self):
+        signup = self.signup("gallery-private-profile")
+        gallery_id = signup.data["gallery"]["id"]
+        public_list = self.client.get("/api/gallaries/")
+        public_profile = self.client.get(f"/api/gallaries/{gallery_id}/")
+        for payload in (public_list.data[0], public_profile.data):
+            self.assertNotIn("email", payload)
+            self.assertNotIn("address", payload)
+            self.assertNotIn("contact", payload)
+
+    def test_target_file_endpoints_require_authentication_and_are_owner_scoped(self):
+        first = self.signup("target-private-owner")
+        upload = SimpleUploadedFile("asset.bin", b"private-asset", content_type="application/octet-stream")
+        created = self.client.post("/api/targetfiles/", {"file": upload}, format="multipart")
+        self.assertEqual(created.status_code, status.HTTP_201_CREATED)
+        target_id = created.data["id"]
+
+        self.client.cookies.clear()
+        self.assertIn(self.client.get("/api/targetfiles/").status_code, (401, 403))
+        self.assertIn(self.client.get(f"/api/targetfiles/{target_id}/").status_code, (401, 403))
+
+        self.signup("target-private-other")
+        self.assertEqual(self.client.get("/api/targetfiles/").data, [])
+        self.assertEqual(self.client.get(f"/api/targetfiles/{target_id}/").status_code, 404)
+        self.assertEqual(self.client.delete(f"/api/targetfiles/{target_id}/").status_code, 404)
+
+        self.client.cookies["gallery_session"] = first.cookies["gallery_session"].value
+        self.assertEqual(self.client.get("/api/targetfiles/").data[0]["id"], target_id)
+        self.assertEqual(self.client.get(f"/api/targetfiles/{target_id}/").status_code, 200)
+
+    def test_item_upload_rejects_oversized_image_and_unsupported_audio(self):
+        self.signup("upload-validation-gallery")
+        oversized = SimpleUploadedFile(
+            "large.jpg", b"x" * (10 * 1024 * 1024 + 1), content_type="image/jpeg"
+        )
+        response = self.client.post(
+            "/api/items/", {"title": "Oversized", "target_image": oversized}, format="multipart"
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        unsupported = SimpleUploadedFile("payload.exe", b"not audio", content_type="audio/mpeg")
+        response = self.client.post(
+            "/api/items/", {"title": "Unsupported audio", "audio": unsupported}, format="multipart"
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
     def test_existing_session_expiry_migration_sets_fourteen_day_expiry(self):
         migration = import_module("artgallery.migrations.0006_gallery_token_expiry")
         update = Mock()
