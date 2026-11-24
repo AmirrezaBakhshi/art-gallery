@@ -61,6 +61,7 @@ jobs:
       GALLERY_LOGIN_RATE: 1000/minute
       VITE_API_BASE_URL: http://127.0.0.1:8000
       E2E_BASE_URL: http://127.0.0.1:5173
+      CAPTURE_SHOWCASE: ${{ github.event_name == 'pull_request' && startsWith(github.head_ref, 'showcase/') && '1' || '0' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -93,6 +94,18 @@ jobs:
         run: npm run dev -- --host 127.0.0.1 > /tmp/vite.log 2>&1 &
       - name: Run browser end-to-end tests
         run: python frontend/e2e/test_gallery_workflow.py
+      - name: Convert showcase walkthrough to GIF
+        if: success() && env.CAPTURE_SHOWCASE == '1'
+        run: |
+          mkdir -p docs/showcase
+          ffmpeg -y -i docs/showcase/videos/artgallery-walkthrough.webm -vf "fps=7,scale=420:-1:flags=lanczos" -loop 0 docs/showcase/artgallery-walkthrough.gif
+      - name: Upload visual showcase
+        if: success() && env.CAPTURE_SHOWCASE == '1'
+        uses: actions/upload-artifact@v4
+        with:
+          name: artgallery-visual-showcase
+          path: docs/showcase/
+          if-no-files-found: error
       - name: Upload browser diagnostics on failure
         if: failure()
         uses: actions/upload-artifact@v4
