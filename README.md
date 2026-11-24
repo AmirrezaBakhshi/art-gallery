@@ -4,6 +4,12 @@ ArtGallery is a full-stack gallery and museum management application. It gives g
 
 The application is built with **React 18, Vite, Django 5.2, and Django REST Framework**. It is structured as a frontend application backed by a REST API and a relational database.
 
+## Visual showcase
+
+![ArtGallery walkthrough](docs/showcase/videos/artgallery-walkthrough.gif)
+
+[Browse application screenshots and the recorded walkthrough](docs/showcase/README.md).
+
 ## Core capabilities
 
 - Public gallery directory and gallery profiles.
