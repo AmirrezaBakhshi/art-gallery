@@ -1,14 +1,17 @@
 import base64
+import io
 import os
 import time
 import unittest
 import urllib.request
 from pathlib import Path
 
+from PIL import Image, ImageDraw
 from playwright.sync_api import sync_playwright, expect
 
 
 BASE_URL = os.getenv("E2E_BASE_URL", "http://127.0.0.1:5173")
+SHOWCASE_DIR = Path(os.getenv("SHOWCASE_DIR", "docs/showcase"))
 
 
 def wait_for(url, timeout=90):
@@ -21,6 +24,40 @@ def wait_for(url, timeout=90):
         except Exception:
             time.sleep(1)
     raise TimeoutError(f"Service did not become ready: {url}")
+
+
+def demo_image_bytes(size=(900, 1200), avatar=False):
+    """Create original, deterministic demo artwork without external image dependencies."""
+    width, height = size
+    image = Image.new("RGB", size)
+    pixels = image.load()
+    for y in range(height):
+        for x in range(width):
+            blend = (x / max(width - 1, 1) * 0.55) + (y / max(height - 1, 1) * 0.45)
+            pixels[x, y] = (
+                int(24 + 48 * blend),
+                int(31 + 74 * (1 - blend)),
+                int(48 + 92 * blend),
+            )
+
+    draw = ImageDraw.Draw(image, "RGBA")
+    if avatar:
+        draw.ellipse((70, 70, width - 70, height - 70), fill=(218, 179, 125, 245))
+        draw.ellipse((145, 145, width - 145, height - 145), fill=(29, 42, 62, 255))
+        draw.arc((165, 165, width - 165, height - 165), 200, 520, fill=(232, 205, 160, 255), width=18)
+    else:
+        draw.ellipse((120, 210, 760, 850), fill=(217, 145, 92, 210))
+        draw.ellipse((245, 330, 650, 740), fill=(32, 52, 77, 230))
+        draw.polygon(
+            [(80, 930), (390, 500), (820, 1010), (760, 1130), (150, 1100)],
+            fill=(222, 190, 143, 225),
+        )
+        draw.arc((170, 250, 760, 940), 205, 510, fill=(246, 220, 178, 255), width=22)
+        draw.line((130, 1040, 770, 160), fill=(255, 255, 255, 115), width=8)
+
+    output = io.BytesIO()
+    image.save(output, format="PNG", optimize=True)
+    return output.getvalue()
 
 
 class GalleryWorkflowE2E(unittest.TestCase):
@@ -37,29 +74,53 @@ class GalleryWorkflowE2E(unittest.TestCase):
         cls.playwright.stop()
 
     def setUp(self):
-        self.context = self.browser.new_context(**self.playwright.devices["iPhone 13"])
+        self.capture_showcase = (
+            os.getenv("CAPTURE_SHOWCASE") == "1"
+            and self._testMethodName == "test_complete_gallery_lifecycle"
+        )
+        context_options = dict(self.playwright.devices["iPhone 13"])
+        if self.capture_showcase:
+            (SHOWCASE_DIR / "screenshots").mkdir(parents=True, exist_ok=True)
+            (SHOWCASE_DIR / "videos").mkdir(parents=True, exist_ok=True)
+            context_options["record_video_dir"] = str(SHOWCASE_DIR / "videos")
+
+        self.context = self.browser.new_context(**context_options)
         self.page = self.context.new_page()
+        self.video = self.page.video
         self.page.set_default_timeout(10000)
         self.page.set_default_navigation_timeout(15000)
-        self.page.add_init_script("""try { Object.defineProperty(screen.orientation, 'type', { configurable: true, get: () => 'portrait-primary' }); } catch (_) {}""")
+        self.page.add_init_script(
+            """try { Object.defineProperty(screen.orientation, 'type', { configurable: true, get: () => 'portrait-primary' }); } catch (_) {}"""
+        )
         self.page_errors = []
         self.page.on("pageerror", lambda error: self.page_errors.append(str(error)))
+
+    def capture(self, filename):
+        if self.capture_showcase:
+            self.page.screenshot(
+                path=str(SHOWCASE_DIR / "screenshots" / filename),
+                full_page=True,
+                animations="disabled",
+            )
 
     def tearDown(self):
         errors = self.page_errors
         self.context.close()
+        if self.capture_showcase and self.video:
+            self.video.save_as(str(SHOWCASE_DIR / "videos" / "artgallery-walkthrough.webm"))
         self.assertEqual(errors, [], f"Browser JavaScript errors: {errors}")
 
     def test_complete_gallery_lifecycle(self):
         stamp = str(time.time_ns())
-        username = f"e2e-gallery-{stamp}"
+        username = f"showcase-gallery-{stamp}"
         password = "SecurePass123"
-        gallery_name = "E2E Gallery"
+        gallery_name = "Atelier North Gallery"
 
-        self.page.goto(f"{BASE_URL}/dashboard")
-        expect(self.page).to_have_url(f"{BASE_URL}/login")
+        self.page.goto(BASE_URL)
+        self.capture("01-home.png")
 
         self.page.goto(f"{BASE_URL}/signup")
+        self.capture("02-signup.png")
         self.page.get_by_placeholder("Museum / Gallary name").fill(gallery_name)
         self.page.get_by_placeholder("username").fill(username)
         self.page.get_by_placeholder("email").fill(f"{username}@example.test")
@@ -73,38 +134,63 @@ class GalleryWorkflowE2E(unittest.TestCase):
         self.assertTrue(session["httpOnly"], "Session cookie must be HttpOnly")
         self.assertIsNone(self.page.evaluate("() => localStorage.getItem('authToken')"))
 
+        self.page.locator('input[type="file"]').first.set_input_files({
+            "name": "gallery-profile.png",
+            "mimeType": "image/png",
+            "buffer": demo_image_bytes((512, 512), avatar=True),
+        })
+        textareas = self.page.locator("textarea")
+        textareas.nth(0).fill(
+            "A considered collection of contemporary forms, material studies, and visual stories."
+        )
+        textareas.nth(1).fill("Demo address — not a real location")
+        self.page.locator('input[type="number"]').fill("0000000000")
+        self.capture("03-gallery-profile-setup.png")
         self.page.get_by_role("button", name="next").click()
         expect(self.page).to_have_url(f"{BASE_URL}/dashboard")
         expect(self.page.get_by_text(gallery_name)).to_be_visible()
+        self.capture("04-gallery-dashboard.png")
 
         self.page.get_by_role("button", name="add new item").click()
         expect(self.page).to_have_url(f"{BASE_URL}/additem")
-        self.page.get_by_placeholder("Title").fill("E2E artwork")
-        image = self.page.locator('input[type="file"]').first
-        image.set_input_files({
-            "name": "target.png",
+        self.page.get_by_placeholder("Title").fill("Study in Form No. 01")
+        self.page.locator('input[type="file"]').first.set_input_files({
+            "name": "study-in-form.png",
             "mimeType": "image/png",
-            "buffer": base64.b64decode(
-                "iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAFklEQVR4nGP8z8DAwMDAxMDAwMDAAAANHQEDasKb6QAAAABJRU5ErkJggg=="
-            ),
+            "buffer": demo_image_bytes(),
         })
+        self.page.locator("textarea").fill(
+            "An original abstract study created for the ArtGallery demonstration."
+        )
+        self.capture("05-artwork-editor.png")
         self.page.get_by_role("button", name="Done").click()
         expect(self.page).to_have_url(f"{BASE_URL}/dashboard")
 
         self.page.get_by_role("button", name="library").click()
-        expect(self.page.get_by_text("E2E artwork")).to_be_visible()
-        self.page.get_by_text("E2E artwork").click()
+        expect(self.page.get_by_text("Study in Form No. 01")).to_be_visible()
+        self.capture("06-gallery-library.png")
+
+        self.page.goto(f"{BASE_URL}/iteminfo/0")
+        expect(self.page.get_by_text("Study in Form No. 01")).to_be_visible()
+        self.capture("07-public-artwork.png")
+        self.page.get_by_role("button", name="view museum / gallary info").click()
+        expect(self.page.get_by_text(gallery_name)).to_be_visible()
+        self.capture("08-public-gallery-profile.png")
+
+        self.page.goto(f"{BASE_URL}/dashboard")
+        self.page.get_by_role("button", name="library").click()
+        self.page.get_by_text("Study in Form No. 01").click()
         expect(self.page).to_have_url(f"{BASE_URL}/editItem")
-        self.page.get_by_placeholder("Title").fill("Updated art")
+        self.page.get_by_placeholder("Title").fill("Updated Art Study")
         self.page.get_by_role("button", name="Done").click()
         expect(self.page).to_have_url(f"{BASE_URL}/library")
-        expect(self.page.get_by_text("Updated art")).to_be_visible()
+        expect(self.page.get_by_text("Updated Art Study")).to_be_visible()
 
-        self.page.get_by_text("Updated art").click()
+        self.page.get_by_text("Updated Art Study").click()
         self.page.once("dialog", lambda dialog: dialog.accept())
         self.page.get_by_role("button", name="Delete Item").click()
         expect(self.page).to_have_url(f"{BASE_URL}/library")
-        expect(self.page.get_by_text("Updated art")).to_have_count(0)
+        expect(self.page.get_by_text("Updated Art Study")).to_have_count(0)
 
         self.page.goto(f"{BASE_URL}/dashboard")
         self.page.get_by_role("button", name="logout").click()
@@ -122,7 +208,7 @@ class GalleryWorkflowE2E(unittest.TestCase):
         )
         self.assertIsNotNone(renewed, "Login must establish a new session cookie")
         self.assertTrue(renewed["httpOnly"])
-        self.assertIsNone(self.page.evaluate("() => localStorage.getItem('authToken')"))
+        self.assertIsNone(self.page.evaluate("() => localStorage.getItem('authToken'))")
 
         self.page.get_by_role("button", name="logout").click()
         expect(self.page).to_have_url(f"{BASE_URL}/login")
