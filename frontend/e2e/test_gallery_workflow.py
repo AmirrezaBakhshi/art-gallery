@@ -1,4 +1,5 @@
 import io
+import json
 import os
 import time
 import unittest
@@ -153,6 +154,8 @@ class GalleryWorkflowE2E(unittest.TestCase):
         expect(self.page).to_have_url(f"{BASE_URL}/dashboard")
 
         self.page.get_by_role("button", name="library").click()
+        debug_state = self.page.evaluate("""async () => ({ user: JSON.parse(localStorage.getItem("user")), items: await (await fetch("http://127.0.0.1:8000/api/items/", { credentials: "include" })).json() })""")
+        print("SHOWCASE_DEBUG", json.dumps(debug_state))
         expect(self.page.get_by_text("Study in Form No. 01")).to_be_visible()
         self.capture("06-gallery-library.png")
 
