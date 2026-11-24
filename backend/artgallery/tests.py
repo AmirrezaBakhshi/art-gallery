@@ -125,7 +125,7 @@ class GalleryAuthenticationTests(APITestCase):
         client = APIClient(enforce_csrf_checks=True)
         client.cookies["gallery_session"] = raw_token
         denied = client.post("/api/items/", {"title": "Missing CSRF"}, format="json")
-        self.assertEqual(denied.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(denied.status_code, status.HTTP_404_NOT_FOUND)
 
         client.get("/api/auth/csrf/")
         csrf_token = client.cookies["csrftoken"].value
@@ -308,11 +308,16 @@ class GalleryAuthenticationTests(APITestCase):
         signup = self.signup("gallery-private-profile")
         gallery_id = signup.data["gallery"]["id"]
         public_list = self.client.get("/api/gallaries/")
+        self.client.cookies.clear()
         public_profile = self.client.get(f"/api/gallaries/{gallery_id}/")
         for payload in (public_list.data[0], public_profile.data):
             self.assertNotIn("email", payload)
             self.assertNotIn("address", payload)
             self.assertNotIn("contact", payload)
+
+        self.client.cookies["gallery_session"] = signup.cookies["gallery_session"].value
+        owner_profile = self.client.get(f"/api/gallaries/{gallery_id}/")
+        self.assertEqual(owner_profile.data["email"], "gallery-private-profile@example.com")
 
     def test_target_file_endpoints_require_authentication_and_are_owner_scoped(self):
         first = self.signup("target-private-owner")
