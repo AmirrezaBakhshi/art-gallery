@@ -189,6 +189,9 @@ class GalleryWorkflowE2E(unittest.TestCase):
         self.capture("07-public-artwork.png")
         self.page.get_by_role("button", name="view museum / gallary info").click()
         expect(self.page.get_by_text(gallery_name)).to_be_visible()
+        expect(self.page.get_by_text("email", exact=True)).to_have_count(0)
+        expect(self.page.get_by_text("12 Gallery Lane")).to_have_count(0)
+        expect(self.page.get_by_text("5550102040")).to_have_count(0)
         self.pause_for_showcase(1400)
         self.capture("08-public-gallery-profile.png")
 
