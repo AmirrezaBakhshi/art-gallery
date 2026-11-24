@@ -108,7 +108,7 @@ class GalleryWorkflowE2E(unittest.TestCase):
         stamp = str(time.time_ns())
         username = f"e2e-gallery-{stamp}"
         password = "SecurePass123"
-        gallery_name = "Atelier North Gallery"
+        gallery_name = "E2E Gallery"
 
         self.page.goto(BASE_URL)
         self.capture("01-home.png")
@@ -137,18 +137,18 @@ class GalleryWorkflowE2E(unittest.TestCase):
 
         self.page.get_by_role("button", name="add new item").click()
         expect(self.page).to_have_url(f"{BASE_URL}/additem")
-        self.page.get_by_placeholder("Title").fill("Study in Form No. 01")
+        self.page.get_by_placeholder("Title").fill("E2E artwork")
         self.page.locator('input[type="file"]').first.set_input_files({
-            "name": "study-in-form.png",
+            "name": "target.png",
             "mimeType": "image/png",
-            "buffer": demo_image_bytes(),
+            "buffer": __import__("base64").b64decode("iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAFklEQVR4nGP8z8DAwMDAwMDAwMDAAAANHQEDasKb6QAAAABJRU5ErkJggg=="),
         })
         self.capture("05-artwork-editor.png")
         self.page.get_by_role("button", name="Done").click()
         expect(self.page).to_have_url(f"{BASE_URL}/dashboard")
 
         self.page.get_by_role("button", name="library").click()
-        expect(self.page.get_by_text("Study in Form No. 01")).to_be_visible()
+        expect(self.page.get_by_text("E2E artwork")).to_be_visible()
         self.capture("06-gallery-library.png")
 
         self.page.goto(f"{BASE_URL}/iteminfo/0")
@@ -162,7 +162,7 @@ class GalleryWorkflowE2E(unittest.TestCase):
         self.page.get_by_role("button", name="library").click()
         self.page.get_by_text("Study in Form No. 01").click()
         expect(self.page).to_have_url(f"{BASE_URL}/editItem")
-        self.page.get_by_placeholder("Title").fill("Updated Art Study")
+        self.page.get_by_placeholder("Title").fill("Updated art")
         self.page.get_by_role("button", name="Done").click()
         expect(self.page).to_have_url(f"{BASE_URL}/library")
         expect(self.page.get_by_text("Updated Art Study")).to_be_visible()
