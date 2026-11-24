@@ -1,16 +1,49 @@
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "http://localhost:8000").replace(/\/$/, "");
 
-export function apiFetch(path, options = {}) {
-  const token = localStorage.getItem("authToken");
-  const headers = new Headers(options.headers || {});
+let csrfToken = null;
+let csrfTokenRequest = null;
 
-  if (token) headers.set("Authorization", `Bearer ${token}`);
+async function getCsrfToken() {
+  if (csrfToken) return csrfToken;
+
+  if (!csrfTokenRequest) {
+    csrfTokenRequest = fetch(`${API_BASE_URL}/api/auth/csrf/`, {
+      credentials: "include",
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error("Unable to initialize a secure session. Check API CORS and cookie settings.");
+        }
+        const payload = await response.json();
+        if (!payload.csrfToken) {
+          throw new Error("The server did not return a CSRF token.");
+        }
+        csrfToken = payload.csrfToken;
+        return csrfToken;
+      })
+      .finally(() => {
+        csrfTokenRequest = null;
+      });
+  }
+
+  return csrfTokenRequest;
+}
+
+export async function apiFetch(path, options = {}) {
+  const headers = new Headers(options.headers || {});
+  const method = (options.method || "GET").toUpperCase();
+
+  if (!["GET", "HEAD", "OPTIONS", "TRACE"].includes(method)) {
+    headers.set("X-CSRFToken", await getCsrfToken());
+  }
+
   if (options.body && !(options.body instanceof FormData) && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
 
   return fetch(`${API_BASE_URL}${path.startsWith("/") ? path : `/${path}`}`, {
     ...options,
+    credentials: "include",
     headers,
   });
 }
@@ -25,11 +58,10 @@ export async function readApiResponse(response) {
 }
 
 export function saveSession(payload) {
-  if (!payload?.gallery || !payload?.token) {
+  if (!payload?.gallery) {
     throw new Error("The server returned an invalid authentication response.");
   }
   localStorage.setItem("user", JSON.stringify(payload.gallery));
-  localStorage.setItem("authToken", payload.token);
 }
 
 export function clearSession() {

@@ -19,6 +19,7 @@ htmlcov/
 .env.*
 !.env.example
 media/
+backend/target_images/
 
 # Node
 node_modules/

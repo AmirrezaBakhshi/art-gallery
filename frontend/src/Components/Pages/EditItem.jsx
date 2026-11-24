@@ -146,6 +146,7 @@ function EditItem() {
         {audio == null ? (
           <AddFileButton
             text={t("add main audio")}
+            accept="audio/*"
             stateChanger={audioChange}
           />
         ) : (
@@ -164,6 +165,7 @@ function EditItem() {
 
         <AddFileButton
           text={t("add augmented image or video")}
+          accept="image/*,video/mp4,video/webm,video/quicktime"
           class={"disabled"}
           stateChanger={setAugmentedVideoOrImage}
         />
@@ -181,6 +183,7 @@ function EditItem() {
         {extraVideo == null ? (
           <AddFileButton
             text={t("add extra video")}
+            accept="video/mp4,video/webm,video/quicktime,video/x-m4v"
             stateChanger={videoChange}
           />
         ) : (

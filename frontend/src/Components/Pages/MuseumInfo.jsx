@@ -56,17 +56,29 @@ function MuseumInfo() {
           <Link text={t("description")} />
           <Text text={gallary.description} width="80%" />
 
-          <div style={{ marginTop: "50px" }} />
-          <Link text={t("address")} />
-          <Text text={gallary.address} width="80%" />
+          {gallary.address && (
+            <>
+              <div style={{ marginTop: "50px" }} />
+              <Link text={t("address")} />
+              <Text text={gallary.address} width="80%" />
+            </>
+          )}
 
-          <div style={{ marginTop: "50px" }} />
-          <Link text={t("phone")} />
-          <Text text={gallary.contact} />
+          {gallary.contact && (
+            <>
+              <div style={{ marginTop: "50px" }} />
+              <Link text={t("phone")} />
+              <Text text={gallary.contact} />
+            </>
+          )}
 
-          <div style={{ marginTop: "50px" }} />
-          <Link text={t("email")} />
-          <Text text={gallary.email} />
+          {gallary.email && (
+            <>
+              <div style={{ marginTop: "50px" }} />
+              <Link text={t("email")} />
+              <Text text={gallary.email} />
+            </>
+          )}
 
           <div style={{ marginTop: "50px" }} />
         </>

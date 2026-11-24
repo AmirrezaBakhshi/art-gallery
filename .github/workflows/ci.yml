@@ -5,7 +5,7 @@ permissions:
 
 on:
   push:
-    branches: [main, "refactor/**"]
+    branches: [main]
   pull_request:
 
 jobs:
@@ -14,6 +14,12 @@ jobs:
     defaults:
       run:
         working-directory: backend
+    env:
+      DJANGO_SECRET_KEY: ci-only-secret-key-that-is-long-enough-for-the-test-environment
+      DJANGO_DEBUG: "true"
+      DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1,testserver
+      GALLERY_SIGNUP_RATE: 1000/hour
+      GALLERY_LOGIN_RATE: 1000/minute
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -25,9 +31,6 @@ jobs:
       - run: python manage.py check
       - run: python manage.py makemigrations --check --dry-run
       - run: python manage.py test
-        env:
-          DJANGO_SECRET_KEY: ci-only-secret-key
-          DJANGO_DEBUG: "true"
 
   frontend:
     runs-on: ubuntu-latest
@@ -45,15 +48,56 @@ jobs:
       - run: npm audit
       - run: npm run lint
       - run: npm run build
-      - name: Commit dependency updates
-        if: github.ref == 'refs/heads/refactor/portfolio-ready' && github.event_name == 'push'
+
+  e2e:
+    runs-on: ubuntu-24.04
+    env:
+      DJANGO_SECRET_KEY: ci-only-secret-key-that-is-long-enough-for-the-test-environment
+      DJANGO_DEBUG: "true"
+      DJANGO_ALLOWED_HOSTS: 127.0.0.1,localhost
+      CORS_ALLOWED_ORIGINS: http://127.0.0.1:5173
+      CSRF_TRUSTED_ORIGINS: http://127.0.0.1:5173
+      GALLERY_SIGNUP_RATE: 1000/hour
+      GALLERY_LOGIN_RATE: 1000/minute
+      VITE_API_BASE_URL: http://127.0.0.1:8000
+      E2E_BASE_URL: http://127.0.0.1:5173
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install backend dependencies
+        working-directory: backend
+        run: pip install -r requirements.txt
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+      - name: Install Playwright and Chromium
         run: |
-          if git diff --quiet -- package.json package-lock.json; then
-            echo "Dependency lockfile is already up to date."
-          else
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add package.json package-lock.json
-            git commit -m "chore: update vulnerable frontend dependencies"
-            git push
-          fi
+          pip install playwright==1.56.0
+          python -m playwright install chromium
+      - name: Start Django API
+        working-directory: backend
+        run: |
+          python manage.py migrate --noinput
+          python manage.py runserver 127.0.0.1:8000 > /tmp/django.log 2>&1 &
+      - name: Start Vite frontend
+        working-directory: frontend
+        run: npm run dev -- --host 127.0.0.1 > /tmp/vite.log 2>&1 &
+      - name: Run browser end-to-end tests
+        run: python frontend/e2e/test_gallery_workflow.py
+      - name: Upload browser diagnostics on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gallery-e2e-diagnostics
+          path: |
+            /tmp/django.log
+            /tmp/vite.log
