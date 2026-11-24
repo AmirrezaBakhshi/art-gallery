@@ -208,7 +208,7 @@ class GalleryWorkflowE2E(unittest.TestCase):
         )
         self.assertIsNotNone(renewed, "Login must establish a new session cookie")
         self.assertTrue(renewed["httpOnly"])
-        self.assertIsNone(self.page.evaluate("() => localStorage.getItem('authToken')")
+        self.assertIsNone(self.page.evaluate("() => localStorage.getItem('authToken')"))
 
         self.page.get_by_role("button", name="logout").click()
         expect(self.page).to_have_url(f"{BASE_URL}/login")
