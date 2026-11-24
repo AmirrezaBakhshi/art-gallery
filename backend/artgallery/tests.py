@@ -125,7 +125,7 @@ class GalleryAuthenticationTests(APITestCase):
         client = APIClient(enforce_csrf_checks=True)
         client.cookies["gallery_session"] = raw_token
         denied = client.post("/api/items/", {"title": "Missing CSRF"}, format="json")
-        self.assertEqual(denied.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(denied.status_code, status.HTTP_403_FORBIDDEN)
 
         client.get("/api/auth/csrf/")
         csrf_token = client.cookies["csrftoken"].value
@@ -409,4 +409,4 @@ class GalleryAuthenticationTests(APITestCase):
         denied = self.client.delete(
             f"/api/targetfiles/{created.data['id']}/"
         )
-        self.assertEqual(denied.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(denied.status_code, status.HTTP_404_NOT_FOUND)
