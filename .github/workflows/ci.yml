@@ -94,13 +94,28 @@ jobs:
         run: npm run dev -- --host 127.0.0.1 > /tmp/vite.log 2>&1 &
       - name: Run browser end-to-end tests
         run: python frontend/e2e/test_gallery_workflow.py
-      - name: Trim walkthrough before owner-only contact details
+      - name: Create readable showcase GIF
         if: success() && env.CAPTURE_SHOWCASE == '1'
         run: |
           PLAYWRIGHT_FFMPEG="$(find "$HOME/.cache/ms-playwright" -type f -name 'ffmpeg-linux' -print -quit)"
           test -n "$PLAYWRIGHT_FFMPEG"
-          "$PLAYWRIGHT_FFMPEG" -y -i docs/showcase/videos/artgallery-walkthrough.webm -t 2.8 -c:v copy /tmp/artgallery-walkthrough-trimmed.webm
-          mv /tmp/artgallery-walkthrough-trimmed.webm docs/showcase/videos/artgallery-walkthrough.webm
+          mkdir -p /tmp/artgallery-gif-frames
+          "$PLAYWRIGHT_FFMPEG" -y -i docs/showcase/videos/artgallery-walkthrough.webm -r 5 /tmp/artgallery-gif-frames/frame-%04d.png
+          python - <<'PY'
+          from glob import glob
+          from PIL import Image
+          frames = [Image.open(path).convert("RGB") for path in sorted(glob("/tmp/artgallery-gif-frames/frame-*.png"))]
+          if not frames:
+              raise SystemExit("No GIF frames were extracted from the walkthrough.")
+          frames[0].save(
+              "docs/showcase/artgallery-walkthrough.gif",
+              save_all=True,
+              append_images=frames[1:],
+              duration=200,
+              loop=0,
+              optimize=True,
+          )
+          PY
       - name: Upload visual showcase
         if: success() && env.CAPTURE_SHOWCASE == '1'
         uses: actions/upload-artifact@v4
@@ -116,3 +131,44 @@ jobs:
           path: |
             /tmp/django.log
             /tmp/vite.log
+
+  publish-showcase:
+    needs: e2e
+    if: success() && github.event_name == 'pull_request' && startsWith(github.head_ref, 'showcase/refined-visuals')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Avoid a commit-triggered showcase loop
+        id: guard
+        run: |
+          SUBJECT="$(git log -1 --pretty=%s)"
+          if [ "$SUBJECT" = "Publish generated ArtGallery showcase" ]; then
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Download verified showcase artifact
+        if: steps.guard.outputs.publish == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          name: artgallery-visual-showcase
+          path: /tmp/artgallery-showcase
+      - name: Commit generated screenshots, video, and GIF
+        if: steps.guard.outputs.publish == 'true'
+        run: |
+          cp -R /tmp/artgallery-showcase/. docs/showcase/
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/showcase/
+          if git diff --cached --quiet; then
+            echo "Showcase assets are already up to date."
+            exit 0
+          fi
+          git commit -m "Publish generated ArtGallery showcase"
+          git push origin "HEAD:refs/heads/${{ github.head_ref }}"
