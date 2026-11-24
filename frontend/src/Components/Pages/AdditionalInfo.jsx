@@ -4,6 +4,7 @@ import AddImageButton from "../Layouts/AddImageButton";
 import Title from "../Layouts/Title";
 import Input from "../Layouts/Input";
 import "../../assets/CSS/button.css";
+import "../../assets/CSS/artworkPreview.css";
 
 import TextArea from "../Layouts/TextArea";
 import Button from "../Layouts/Button";
@@ -84,16 +85,16 @@ function AdditionalInfo() {
             />
           ) : (
             <>
-              <Image
-                shape="round"
-                width="35%"
-                height="125px"
-                left="32%"
-                
-                src={shownImage}
-              />
-
-              <RemoveButton stateChanger={imageChange} />
+              <div className="profile-image-preview">
+                <Image
+                  shape="round"
+                  width="130px"
+                  height="130px"
+                  left="0"
+                  src={shownImage}
+                />
+                <RemoveButton stateChanger={imageChange} />
+              </div>
             </>
           )}
 
