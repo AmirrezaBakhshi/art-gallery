@@ -25,6 +25,7 @@ function AddFileButton(params) {
       {/* a hidden file input field: */}
       <input
         type="file"
+        accept={params.accept}
         ref={hiddenFileInput}
         onChange={handleChange}
         style={{ display: "none" }}
