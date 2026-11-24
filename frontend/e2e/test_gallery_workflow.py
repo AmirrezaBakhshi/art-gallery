@@ -158,10 +158,12 @@ class GalleryWorkflowE2E(unittest.TestCase):
 
         self.page.goto(f"{BASE_URL}/iteminfo/0")
         expect(self.page.get_by_text("Form Study 01")).to_be_visible()
+        artwork_image = self.page.locator('img[src*="target_images"]')
+        expect(artwork_image).to_be_visible()
+        artwork_image.evaluate("(image) => image.decode()")
         self.capture("07-public-artwork.png")
         self.page.get_by_role("button", name="view museum / gallary info").click()
         expect(self.page.get_by_text(gallery_name)).to_be_visible()
-        self.capture("08-public-gallery-profile.png")
 
         self.page.goto(f"{BASE_URL}/dashboard")
         self.page.get_by_role("button", name="library").click()
