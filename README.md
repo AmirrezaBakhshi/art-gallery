@@ -8,6 +8,8 @@ The application is built with **React 18, Vite, Django 5.2, and Django REST Fram
 
 [Browse application screenshots and watch the recorded walkthrough](docs/showcase/README.md).
 
+![ArtGallery application walkthrough](docs/showcase/artgallery-walkthrough.gif)
+
 ## Core capabilities
 
 - Public gallery directory and gallery profiles.
