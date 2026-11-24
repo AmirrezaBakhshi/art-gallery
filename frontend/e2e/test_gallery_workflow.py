@@ -1,4 +1,3 @@
-import base64
 import io
 import os
 import time
@@ -26,8 +25,8 @@ def wait_for(url, timeout=90):
     raise TimeoutError(f"Service did not become ready: {url}")
 
 
-def demo_image_bytes(size=(900, 1200), avatar=False):
-    """Create original, deterministic demo artwork without external image dependencies."""
+def demo_image_bytes(size=(900, 1200)):
+    """Generate an original artwork image for repeatable demo runs."""
     width, height = size
     image = Image.new("RGB", size)
     pixels = image.load()
@@ -41,19 +40,14 @@ def demo_image_bytes(size=(900, 1200), avatar=False):
             )
 
     draw = ImageDraw.Draw(image, "RGBA")
-    if avatar:
-        draw.ellipse((70, 70, width - 70, height - 70), fill=(218, 179, 125, 245))
-        draw.ellipse((145, 145, width - 145, height - 145), fill=(29, 42, 62, 255))
-        draw.arc((165, 165, width - 165, height - 165), 200, 520, fill=(232, 205, 160, 255), width=18)
-    else:
-        draw.ellipse((120, 210, 760, 850), fill=(217, 145, 92, 210))
-        draw.ellipse((245, 330, 650, 740), fill=(32, 52, 77, 230))
-        draw.polygon(
-            [(80, 930), (390, 500), (820, 1010), (760, 1130), (150, 1100)],
-            fill=(222, 190, 143, 225),
-        )
-        draw.arc((170, 250, 760, 940), 205, 510, fill=(246, 220, 178, 255), width=22)
-        draw.line((130, 1040, 770, 160), fill=(255, 255, 255, 115), width=8)
+    draw.ellipse((120, 210, 760, 850), fill=(217, 145, 92, 210))
+    draw.ellipse((245, 330, 650, 740), fill=(32, 52, 77, 230))
+    draw.polygon(
+        [(80, 930), (390, 500), (820, 1010), (760, 1130), (150, 1100)],
+        fill=(222, 190, 143, 225),
+    )
+    draw.arc((170, 250, 760, 940), 205, 510, fill=(246, 220, 178, 255), width=22)
+    draw.line((130, 1040, 770, 160), fill=(255, 255, 255, 115), width=8)
 
     output = io.BytesIO()
     image.save(output, format="PNG", optimize=True)
@@ -112,12 +106,13 @@ class GalleryWorkflowE2E(unittest.TestCase):
 
     def test_complete_gallery_lifecycle(self):
         stamp = str(time.time_ns())
-        username = f"showcase-gallery-{stamp}"
+        username = f"e2e-gallery-{stamp}"
         password = "SecurePass123"
         gallery_name = "Atelier North Gallery"
 
         self.page.goto(BASE_URL)
         self.capture("01-home.png")
+        expect(self.page.get_by_text("Do you own a museum / gallary?")).to_be_visible()
 
         self.page.goto(f"{BASE_URL}/signup")
         self.capture("02-signup.png")
@@ -128,24 +123,13 @@ class GalleryWorkflowE2E(unittest.TestCase):
         self.page.get_by_role("button", name="signup").click()
 
         expect(self.page).to_have_url(f"{BASE_URL}/additionalinfo")
+        self.capture("03-gallery-setup.png")
         cookies = self.context.cookies()
         session = next((item for item in cookies if item["name"] == "gallery_session"), None)
         self.assertIsNotNone(session, "Signup must establish a gallery session cookie")
         self.assertTrue(session["httpOnly"], "Session cookie must be HttpOnly")
         self.assertIsNone(self.page.evaluate("() => localStorage.getItem('authToken')"))
 
-        self.page.locator('input[type="file"]').first.set_input_files({
-            "name": "gallery-profile.png",
-            "mimeType": "image/png",
-            "buffer": demo_image_bytes((512, 512), avatar=True),
-        })
-        textareas = self.page.locator("textarea")
-        textareas.nth(0).fill(
-            "A considered collection of contemporary forms, material studies, and visual stories."
-        )
-        textareas.nth(1).fill("Demo address — not a real location")
-        self.page.locator('input[type="number"]').fill("0000000000")
-        self.capture("03-gallery-profile-setup.png")
         self.page.get_by_role("button", name="next").click()
         expect(self.page).to_have_url(f"{BASE_URL}/dashboard")
         expect(self.page.get_by_text(gallery_name)).to_be_visible()
@@ -159,9 +143,6 @@ class GalleryWorkflowE2E(unittest.TestCase):
             "mimeType": "image/png",
             "buffer": demo_image_bytes(),
         })
-        self.page.locator("textarea").fill(
-            "An original abstract study created for the ArtGallery demonstration."
-        )
         self.capture("05-artwork-editor.png")
         self.page.get_by_role("button", name="Done").click()
         expect(self.page).to_have_url(f"{BASE_URL}/dashboard")
