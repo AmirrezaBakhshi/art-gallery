@@ -141,7 +141,7 @@ class GalleryWorkflowE2E(unittest.TestCase):
         self.page.locator('input[type="file"]').first.set_input_files({
             "name": "target.png",
             "mimeType": "image/png",
-            "buffer": __import__("base64").b64decode("iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAFklEQVR4nGP8z8DAwMDAwMDAwMDAAAANHQEDasKb6QAAAABJRU5ErkJggg=="),
+            "buffer": __import__("base64").b64decode("iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAFklEQVR4nGP8z8DAwMDAxMDAwMDAAAANHQEDasKb6QAAAABJRU5ErkJggg=="),
         })
         self.capture("05-artwork-editor.png")
         self.page.get_by_role("button", name="Done").click()
