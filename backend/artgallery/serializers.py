@@ -73,6 +73,11 @@ class GallarySerializer(serializers.ModelSerializer):
                 data.pop(field, None)
         return data
 
+    def validate_image(self, value):
+        if value and value.size > 5 * 1024 * 1024:
+            raise serializers.ValidationError("Gallery profile images must not exceed 5 MB.")
+        return value
+
     def validate_password(self, value):
         if not contains_number(value):
             raise serializers.ValidationError("Your password must contain at least one digit.")
@@ -100,6 +105,11 @@ class SignupSerializer(serializers.ModelSerializer):
         fields = ("id", "username", "password", "name", "email", "image",
                   "address", "contact", "description")
         read_only_fields = ("id",)
+
+    def validate_image(self, value):
+        if value and value.size > 5 * 1024 * 1024:
+            raise serializers.ValidationError("Gallery profile images must not exceed 5 MB.")
+        return value
 
     def validate_password(self, value):
         if not contains_number(value):
