@@ -41,7 +41,7 @@ class GallerySignupView(ListCreateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         gallery = serializer.save()
-        response = Response({"gallery": GallarySerializer(gallery, context={"request": request}).data}, status=status.HTTP_201_CREATED)
+        response = Response({"gallery": GallarySerializer(gallery, context={"request": request, "include_private": True}).data}, status=status.HTTP_201_CREATED)
         get_token(request)
         response.set_cookie("gallery_session", gallery._issued_token, max_age=settings.GALLERY_SESSION_TTL_DAYS * 86400, httponly=True, secure=not settings.DEBUG, samesite=settings.SESSION_COOKIE_SAMESITE, path="/")
         return response
@@ -79,7 +79,7 @@ class GalleryLoginView(APIView):
         gallery.api_token = token_digest(raw_token)
         gallery.api_token_expires_at = timezone.now() + timedelta(days=settings.GALLERY_SESSION_TTL_DAYS)
         gallery.save(update_fields=["api_token", "api_token_expires_at"])
-        response = Response({"gallery": GallarySerializer(gallery, context={"request": request}).data})
+        response = Response({"gallery": GallarySerializer(gallery, context={"request": request, "include_private": True}).data})
         get_token(request)
         response.set_cookie("gallery_session", raw_token, max_age=settings.GALLERY_SESSION_TTL_DAYS * 86400, httponly=True, secure=not settings.DEBUG, samesite=settings.SESSION_COOKIE_SAMESITE, path="/")
         return response
@@ -126,19 +126,25 @@ class ItemView(RetrieveUpdateDestroyAPIView):
 
 
 class TargetFileListView(ListCreateAPIView):
-    queryset = TargetFile.objects.select_related("gallary").all()
     serializer_class = TargetFileSerializer
     authentication_classes = (GalleryTokenAuthentication, SessionAuthentication)
+    permission_classes = (IsAuthenticated,)
 
-    def get_permissions(self):
-        return (AllowAny(),) if self.request.method in ("GET", "HEAD", "OPTIONS") else (IsAuthenticated(),)
+    def get_queryset(self):
+        # Never expose target-file records or storage URLs across gallery accounts.
+        return TargetFile.objects.select_related("gallary").filter(
+            gallary=self.request.user
+        )
 
     def perform_create(self, serializer):
         serializer.save(gallary=self.request.user)
 
 
 class TargetFileView(RetrieveUpdateDestroyAPIView):
-    queryset = TargetFile.objects.all()
     serializer_class = TargetFileSerializer
     authentication_classes = (GalleryTokenAuthentication, SessionAuthentication)
-    permission_classes = (IsGalleryOwnerOrReadOnly,)
+    permission_classes = (IsAuthenticated, IsGalleryOwnerOrReadOnly)
+
+    def get_queryset(self):
+        # Scope before object permission checks to prevent cross-gallery ID probing.
+        return TargetFile.objects.filter(gallary=self.request.user)
