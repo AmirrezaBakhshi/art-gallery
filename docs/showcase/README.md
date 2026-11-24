@@ -16,8 +16,6 @@ This showcase is captured from the running React and Django application by the P
 
 ## Walkthrough
 
-![ArtGallery browser walkthrough](videos/artgallery-walkthrough.gif)
-
-- [Watch the WebM recording](videos/artgallery-walkthrough.webm)
+[Watch the short browser walkthrough (WebM)](videos/artgallery-walkthrough.webm)
 
 The images and recording show the real application interface with synthetic demo content. They are not mockups, and the repository does not currently provide a hosted live demo.
