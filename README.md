@@ -6,7 +6,7 @@ ArtGallery is a React + Django REST Framework application for galleries and muse
 
 - `frontend/`: React 18 application built with Vite.
 - `backend/`: Django 5.2 LTS and Django REST Framework API.
-- SQLite is used by default for local development. PostgreSQL can be configured with `DATABASE_URL`.
+- SQLite is used by default only for local development. Production requires PostgreSQL via `DATABASE_URL`; startup fails if it is missing or uses another database engine.
 
 ## Requirements
 
@@ -55,9 +55,9 @@ Set `VITE_API_BASE_URL` in `frontend/.env` if the API is not running at `http://
 | GET | `/api/items/` | Public artwork collection |
 | POST | `/api/items/` | Authenticated gallery |
 | GET | `/api/items/{id}/` | Public artwork |
-| GET | `/api/targetfiles/` | Public target-file listing (review access policy before storing private files) |
+| GET | `/api/targetfiles/` | Authenticated owning gallery only |
 | POST | `/api/targetfiles/` | Authenticated gallery |
-| GET | `/api/targetfiles/{id}/` | Public target file |
+| GET | `/api/targetfiles/{id}/` | Authenticated owning gallery only |
 | PUT / PATCH / DELETE | `/api/targetfiles/{id}/` | Owning gallery |
 | PATCH / PUT / DELETE | `/api/items/{id}/` | Owning gallery |
 
@@ -88,5 +88,5 @@ npm run build
 - Gallery passwords are write-only at the API boundary and stored as Django password hashes.
 - Gallery write operations and artwork mutations require an authenticated session. Browser sessions use HttpOnly cookies and CSRF validation.
 - Artwork ownership is checked on update and delete.
-- Gallery and artwork read endpoints are public. Target-file list/detail endpoints are also currently public; store only assets intended for public access there.
-- Media uploads should be served from a dedicated media service in production; Django's development media serving is enabled only when `DEBUG` is true.
+- Gallery directory/profile responses omit email, address, and contact details. Those fields remain available to the authenticated gallery owner. Artwork reads remain public. Target-file list/detail endpoints and their uploaded-file URLs are restricted to the owning authenticated gallery.
+- Media uploads should be served from a dedicated media service in production; Django's development media serving is enabled only when `DEBUG` is true. API upload validation caps target images at 10 MB, audio at 25 MB, videos at 100 MB, and target files at 50 MB. The reverse proxy or ingress must also enforce an appropriate request-body limit. Extension checks are defense-in-depth, not malware scanning or proof of file contents.
