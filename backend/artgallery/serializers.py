@@ -28,6 +28,17 @@ class GallarySerializer(serializers.ModelSerializer):
         )
         read_only_fields = ("id", "username", "email")
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        request = self.context.get("request")
+        user = getattr(request, "user", None)
+        include_private = self.context.get("include_private", False)
+        is_owner = bool(user and getattr(user, "is_authenticated", False) and user.pk == instance.pk)
+        if not (include_private or is_owner):
+            for field in ("email", "address", "contact"):
+                data.pop(field, None)
+        return data
+
     def validate_password(self, value):
         if not contains_number(value):
             raise serializers.ValidationError("Your password must contain at least one digit.")
