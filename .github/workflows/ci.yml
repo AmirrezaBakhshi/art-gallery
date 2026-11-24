@@ -100,7 +100,7 @@ jobs:
           PLAYWRIGHT_FFMPEG="$(find "$HOME/.cache/ms-playwright" -type f -name 'ffmpeg-linux' -print -quit)"
           test -n "$PLAYWRIGHT_FFMPEG"
           mkdir -p /tmp/artgallery-gif-frames
-          "$PLAYWRIGHT_FFMPEG" -y -i docs/showcase/videos/artgallery-walkthrough.webm -vf "fps=5,scale=520:-1:flags=lanczos" /tmp/artgallery-gif-frames/frame-%04d.png
+          "$PLAYWRIGHT_FFMPEG" -y -i docs/showcase/videos/artgallery-walkthrough.webm -r 5 /tmp/artgallery-gif-frames/frame-%04d.png
           python - <<'PY'
           from glob import glob
           from PIL import Image
