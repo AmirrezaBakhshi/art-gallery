@@ -14,6 +14,7 @@ import { useTranslation } from "react-i18next";
 import VideoArea from "../Layouts/VideoArea";
 import { Navigate, useNavigate } from "react-router-dom";
 import PlayAudioButton from "../Layouts/PlayAudioButton";
+import "../../assets/CSS/artworkPreview.css";
 
 function EditItem() {
   const item = JSON.parse(localStorage.getItem("item") || "null");
@@ -135,7 +136,9 @@ function EditItem() {
     <>
       <ReturnButton redirectPath={"/library"} />
       <div style={{ alignItems: "center", marginTop: "3%" }}>
-        <Image width="65%" left="16%" src={item.target_image} />
+        <div className="artwork-preview">
+          <Image width="65%" left="0" src={item.target_image} />
+        </div>
 
         <div style={{ marginTop: "3%" }}></div>
 
