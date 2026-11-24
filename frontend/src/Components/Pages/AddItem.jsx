@@ -92,7 +92,7 @@ function AddItem() {
   };
 
   const imageChange = (obj) => {
-    if (obj != null && obj.size / 1024 > 2000) {
+    if (obj != null && obj.size > 10 * 1024 * 1024) {
       setIsImageBig(true);
       return;
     }
@@ -131,7 +131,7 @@ function AddItem() {
                 />
                 {isImageBig ? (
                   <Link
-                    text={t("Your image size must be less than 400KBs")}
+                    text={t("Your image size must be less than 10 MB")}
                     color={"red"}
                   />
                 ) : (
@@ -152,7 +152,7 @@ function AddItem() {
             <div style={{ marginTop: "3%" }}></div>
 
             {audio == null ? (
-              <AddFileButton text={t("add main audio")} stateChanger={audioChange} />
+              <AddFileButton text={t("add main audio")} accept="audio/*" stateChanger={audioChange} />
             ) : (
               <>
                 <div style={{ marginTop: "3%" }}></div>
@@ -166,6 +166,7 @@ function AddItem() {
 
             <AddFileButton
               text={t("add augmented image or video")}
+              accept="image/*,video/mp4,video/webm,video/quicktime"
               // class={"disabled"}
               stateChanger={setAugmentedVideoOrImage}
             />
@@ -179,6 +180,7 @@ function AddItem() {
             {extraVideo == null ? (
               <AddFileButton
                 text={t("add extra video")}
+                accept="video/mp4,video/webm,video/quicktime,video/x-m4v"
                 stateChanger={videoChange}
               />
             ) : (
