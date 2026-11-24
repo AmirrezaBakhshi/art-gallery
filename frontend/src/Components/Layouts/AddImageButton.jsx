@@ -24,6 +24,7 @@ function AddImageButton(params) {
   const handleChange = async (event) => {
     if (event.target.files) {
       await params.stateChanger(event.target.files[0]);
+      event.target.value = "";
     }
   };
 
@@ -40,6 +41,7 @@ function AddImageButton(params) {
 
       <input
         type="file"
+        accept="image/*"
         ref={hiddenFileInput}
         style={{ display: "none" }}
         onChange={handleChange}
