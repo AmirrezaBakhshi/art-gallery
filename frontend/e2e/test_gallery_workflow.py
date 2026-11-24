@@ -1,5 +1,4 @@
 import io
-import json
 import os
 import time
 import unittest
@@ -143,7 +142,7 @@ class GalleryWorkflowE2E(unittest.TestCase):
 
         self.page.get_by_role("button", name="add new item").click()
         expect(self.page).to_have_url(f"{BASE_URL}/additem")
-        self.page.get_by_placeholder("Title").fill("Study in Form No. 01")
+        self.page.get_by_placeholder("Title").fill("Form Study 01")
         self.page.locator('input[type="file"]').first.set_input_files({
             "name": "study-in-form.png",
             "mimeType": "image/png",
@@ -154,13 +153,11 @@ class GalleryWorkflowE2E(unittest.TestCase):
         expect(self.page).to_have_url(f"{BASE_URL}/dashboard")
 
         self.page.get_by_role("button", name="library").click()
-        debug_state = self.page.evaluate("""async () => ({ user: JSON.parse(localStorage.getItem("user")), items: await (await fetch("http://127.0.0.1:8000/api/items/", { credentials: "include" })).json() })""")
-        print("SHOWCASE_DEBUG", json.dumps(debug_state))
-        expect(self.page.get_by_text("Study in Form No. 01")).to_be_visible()
+        expect(self.page.get_by_text("Form Study 01")).to_be_visible()
         self.capture("06-gallery-library.png")
 
         self.page.goto(f"{BASE_URL}/iteminfo/0")
-        expect(self.page.get_by_text("Study in Form No. 01")).to_be_visible()
+        expect(self.page.get_by_text("Form Study 01")).to_be_visible()
         self.capture("07-public-artwork.png")
         self.page.get_by_role("button", name="view museum / gallary info").click()
         expect(self.page.get_by_text(gallery_name)).to_be_visible()
@@ -168,18 +165,18 @@ class GalleryWorkflowE2E(unittest.TestCase):
 
         self.page.goto(f"{BASE_URL}/dashboard")
         self.page.get_by_role("button", name="library").click()
-        self.page.get_by_text("Study in Form No. 01").click()
+        self.page.get_by_text("Form Study 01").click()
         expect(self.page).to_have_url(f"{BASE_URL}/editItem")
-        self.page.get_by_placeholder("Title").fill("Updated Art Study")
+        self.page.get_by_placeholder("Title").fill("Updated Study")
         self.page.get_by_role("button", name="Done").click()
         expect(self.page).to_have_url(f"{BASE_URL}/library")
-        expect(self.page.get_by_text("Updated Art Study")).to_be_visible()
+        expect(self.page.get_by_text("Updated Study")).to_be_visible()
 
-        self.page.get_by_text("Updated Art Study").click()
+        self.page.get_by_text("Updated Study").click()
         self.page.once("dialog", lambda dialog: dialog.accept())
         self.page.get_by_role("button", name="Delete Item").click()
         expect(self.page).to_have_url(f"{BASE_URL}/library")
-        expect(self.page.get_by_text("Updated Art Study")).to_have_count(0)
+        expect(self.page.get_by_text("Updated Study")).to_have_count(0)
 
         self.page.goto(f"{BASE_URL}/dashboard")
         self.page.get_by_role("button", name="logout").click()
