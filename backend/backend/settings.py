@@ -71,11 +71,16 @@ TEMPLATES = [{
 }]
 WSGI_APPLICATION = "backend.wsgi.application"
 
-DATABASE_URL = os.getenv("DATABASE_URL", "")
-if DATABASE_URL.startswith(("postgres://", "postgresql://")):
+DATABASE_URL = os.getenv("DATABASE_URL", "").strip()
+if not DEBUG and not DATABASE_URL:
+    raise RuntimeError("DATABASE_URL must point to PostgreSQL when DJANGO_DEBUG is false.")
+if DATABASE_URL:
+    if not DATABASE_URL.startswith(("postgres://", "postgresql://")):
+        raise RuntimeError("DATABASE_URL must use PostgreSQL (postgres:// or postgresql://).")
     import dj_database_url
     DATABASES = {"default": dj_database_url.parse(DATABASE_URL, conn_max_age=600, ssl_require=not DEBUG)}
 else:
+    # SQLite is a convenient local-development default only.
     DATABASES = {"default": {"ENGINE": "django.db.backends.sqlite3", "NAME": BASE_DIR / "db.sqlite3"}}
 
 AUTH_PASSWORD_VALIDATORS = [
