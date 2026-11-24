@@ -165,13 +165,13 @@ class GalleryWorkflowE2E(unittest.TestCase):
         self.page.get_by_placeholder("Title").fill("Updated art")
         self.page.get_by_role("button", name="Done").click()
         expect(self.page).to_have_url(f"{BASE_URL}/library")
-        expect(self.page.get_by_text("Updated Art Study")).to_be_visible()
+        expect(self.page.get_by_text("Updated art")).to_be_visible()
 
-        self.page.get_by_text("Updated Art Study").click()
+        self.page.get_by_text("Updated art").click()
         self.page.once("dialog", lambda dialog: dialog.accept())
         self.page.get_by_role("button", name="Delete Item").click()
         expect(self.page).to_have_url(f"{BASE_URL}/library")
-        expect(self.page.get_by_text("Updated Art Study")).to_have_count(0)
+        expect(self.page.get_by_text("Updated art")).to_have_count(0)
 
         self.page.goto(f"{BASE_URL}/dashboard")
         self.page.get_by_role("button", name="logout").click()
