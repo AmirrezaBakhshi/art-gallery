@@ -102,13 +102,14 @@ class GalleryWorkflowE2E(unittest.TestCase):
         self.context.close()
         if self.capture_showcase and self.video:
             self.video.save_as(str(SHOWCASE_DIR / "videos" / "artgallery-walkthrough.webm"))
+            Path(self.video.path()).unlink(missing_ok=True)
         self.assertEqual(errors, [], f"Browser JavaScript errors: {errors}")
 
     def test_complete_gallery_lifecycle(self):
         stamp = str(time.time_ns())
         username = f"e2e-gallery-{stamp}"
         password = "SecurePass123"
-        gallery_name = "E2E Gallery"
+        gallery_name = "Atelier North Gallery"
 
         self.page.goto(BASE_URL)
         self.capture("01-home.png")
@@ -130,6 +131,18 @@ class GalleryWorkflowE2E(unittest.TestCase):
         self.assertTrue(session["httpOnly"], "Session cookie must be HttpOnly")
         self.assertIsNone(self.page.evaluate("() => localStorage.getItem('authToken')"))
 
+        self.page.locator('input[type="file"]').first.set_input_files({
+            "name": "gallery-profile.png",
+            "mimeType": "image/png",
+            "buffer": demo_image_bytes((512, 512), avatar=True),
+        })
+        textareas = self.page.locator("textarea")
+        textareas.nth(0).fill(
+            "A considered collection of contemporary forms, material studies, and visual stories."
+        )
+        textareas.nth(1).fill("Demonstration profile — no real-world address")
+        self.page.locator('input[type="number"]').fill("0000000000")
+        self.capture("03-gallery-setup.png")
         self.page.get_by_role("button", name="next").click()
         expect(self.page).to_have_url(f"{BASE_URL}/dashboard")
         expect(self.page.get_by_text(gallery_name)).to_be_visible()
@@ -137,22 +150,22 @@ class GalleryWorkflowE2E(unittest.TestCase):
 
         self.page.get_by_role("button", name="add new item").click()
         expect(self.page).to_have_url(f"{BASE_URL}/additem")
-        self.page.get_by_placeholder("Title").fill("E2E artwork")
+        self.page.get_by_placeholder("Title").fill("Study in Form No. 01")
         self.page.locator('input[type="file"]').first.set_input_files({
-            "name": "target.png",
+            "name": "study-in-form.png",
             "mimeType": "image/png",
-            "buffer": __import__("base64").b64decode("iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAFklEQVR4nGP8z8DAwMDAxMDAwMDAAAANHQEDasKb6QAAAABJRU5ErkJggg=="),
+            "buffer": demo_image_bytes(),
         })
         self.capture("05-artwork-editor.png")
         self.page.get_by_role("button", name="Done").click()
         expect(self.page).to_have_url(f"{BASE_URL}/dashboard")
 
         self.page.get_by_role("button", name="library").click()
-        expect(self.page.get_by_text("E2E artwork")).to_be_visible()
+        expect(self.page.get_by_text("Study in Form No. 01")).to_be_visible()
         self.capture("06-gallery-library.png")
 
         self.page.goto(f"{BASE_URL}/iteminfo/0")
-        expect(self.page.get_by_text("E2E artwork")).to_be_visible()
+        expect(self.page.get_by_text("Study in Form No. 01")).to_be_visible()
         self.capture("07-public-artwork.png")
         self.page.get_by_role("button", name="view museum / gallary info").click()
         expect(self.page.get_by_text(gallery_name)).to_be_visible()
@@ -160,18 +173,18 @@ class GalleryWorkflowE2E(unittest.TestCase):
 
         self.page.goto(f"{BASE_URL}/dashboard")
         self.page.get_by_role("button", name="library").click()
-        self.page.get_by_text("E2E artwork").click()
+        self.page.get_by_text("Study in Form No. 01").click()
         expect(self.page).to_have_url(f"{BASE_URL}/editItem")
-        self.page.get_by_placeholder("Title").fill("Updated art")
+        self.page.get_by_placeholder("Title").fill("Updated Art Study")
         self.page.get_by_role("button", name="Done").click()
         expect(self.page).to_have_url(f"{BASE_URL}/library")
-        expect(self.page.get_by_text("Updated art")).to_be_visible()
+        expect(self.page.get_by_text("Updated Art Study")).to_be_visible()
 
-        self.page.get_by_text("Updated art").click()
+        self.page.get_by_text("Updated Art Study").click()
         self.page.once("dialog", lambda dialog: dialog.accept())
         self.page.get_by_role("button", name="Delete Item").click()
         expect(self.page).to_have_url(f"{BASE_URL}/library")
-        expect(self.page.get_by_text("Updated art")).to_have_count(0)
+        expect(self.page.get_by_text("Updated Art Study")).to_have_count(0)
 
         self.page.goto(f"{BASE_URL}/dashboard")
         self.page.get_by_role("button", name="logout").click()
