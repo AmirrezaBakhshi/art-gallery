@@ -20,6 +20,7 @@ import CustomLoadingButton from "../Layouts/CustumLoadingButton";
 
 import useScreenOrientation from "react-hook-screen-orientation";
 import Landscape from "./Landscape";
+import "../../assets/CSS/artworkPreview.css";
 
 function AddItem() {
   const navigate = useNavigate();
@@ -140,8 +141,10 @@ function AddItem() {
               </>
             ) : (
               <>
-                <Image width="65%" left="16%" src={shownImage} />
-                <RemoveButton stateChanger={imageChange} />
+                <div className="artwork-preview">
+                  <Image width="65%" left="0" src={shownImage} />
+                  <RemoveButton stateChanger={imageChange} />
+                </div>
               </>
             )}
 
