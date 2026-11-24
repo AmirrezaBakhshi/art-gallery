@@ -116,6 +116,22 @@ jobs:
           git add docs/showcase/
           git commit -m "Add ArtGallery visual showcase assets"
           git push origin "HEAD:$GITHUB_HEAD_REF"
+      - name: Trim walkthrough and generate GIF
+        if: success() && env.CAPTURE_SHOWCASE == '1'
+        run: |
+          PLAYWRIGHT_FFMPEG="$(find "$HOME/.cache/ms-playwright" -type f -name 'ffmpeg-linux' -print -quit)"
+          test -n "$PLAYWRIGHT_FFMPEG"
+          "$PLAYWRIGHT_FFMPEG" -y -i docs/showcase/videos/artgallery-walkthrough.webm -t 2.8 -c:v libvpx-vp9 -crf 35 -b:v 0 /tmp/artgallery-walkthrough-trimmed.webm
+          mv /tmp/artgallery-walkthrough-trimmed.webm docs/showcase/videos/artgallery-walkthrough.webm
+          "$PLAYWRIGHT_FFMPEG" -y -i docs/showcase/videos/artgallery-walkthrough.webm -vf "fps=6,scale=420:-1:flags=lanczos" -loop 0 docs/showcase/videos/artgallery-walkthrough.gif
+      - name: Commit showcase assets to the PR branch
+        if: success() && env.CAPTURE_SHOWCASE == '1'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/showcase/
+          git commit -m "Add ArtGallery visual showcase assets"
+          git push origin "HEAD:$GITHUB_HEAD_REF"
       - name: Upload visual showcase
         if: success() && env.CAPTURE_SHOWCASE == '1'
         uses: actions/upload-artifact@v4
