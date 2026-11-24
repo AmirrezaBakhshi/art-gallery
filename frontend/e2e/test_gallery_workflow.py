@@ -177,6 +177,9 @@ class GalleryWorkflowE2E(unittest.TestCase):
         self.pause_for_showcase(1300)
         self.capture("06-gallery-library.png")
 
+        # Switch to an anonymous visitor before capturing public pages. This also
+        # verifies that private gallery contact fields are not shown publicly.
+        self.context.clear_cookies()
         self.page.goto(f"{BASE_URL}/iteminfo/0")
         expect(self.page.get_by_text("Form Study 01")).to_be_visible()
         artwork_image = self.page.locator('img[src*="target_images"]')
@@ -189,7 +192,11 @@ class GalleryWorkflowE2E(unittest.TestCase):
         self.pause_for_showcase(1400)
         self.capture("08-public-gallery-profile.png")
 
-        self.page.goto(f"{BASE_URL}/dashboard")
+        self.page.goto(f"{BASE_URL}/login")
+        self.page.get_by_placeholder("username").fill(username)
+        self.page.get_by_placeholder("password").fill(password)
+        self.page.get_by_role("button", name="login").click()
+        expect(self.page).to_have_url(f"{BASE_URL}/dashboard")
         self.page.get_by_role("button", name="library").click()
         self.page.get_by_text("Form Study 01").click()
         expect(self.page).to_have_url(f"{BASE_URL}/editItem")
