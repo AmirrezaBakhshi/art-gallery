@@ -1,17 +1,14 @@
+/* eslint-disable react/prop-types */
 import "../../assets/CSS/button.css";
-import ReactLoading from "react-loading";
 import Text from "./Text";
 
-function CustomLoadingButton(params) {
-
+function CustomLoadingButton({ text }) {
   return (
     <>
-        <button className="button">
-        {/* This will display a bubble-style loading animation inside the
-         button to indicate that something is loading or in progress. */}
-        <ReactLoading type="bubbles" />
-        </button>
-        {params.text && <Text text={"this might take some time"} />}
+      <button className="button loading-button" type="button" disabled aria-busy="true">
+        <span className="loading-spinner" role="status" aria-label="Loading" />
+      </button>
+      {text && <Text text="this might take some time" />}
     </>
   );
 }

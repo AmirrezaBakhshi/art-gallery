@@ -16,7 +16,9 @@ class Gallary(models.Model):
     username = models.CharField(max_length=50, unique=True)
     # Passwords are stored as Django password hashes, never as plaintext.
     password = models.CharField(max_length=128)
+    # SHA-256 digest of the bearer token; the raw token is only returned once.
     api_token = models.CharField(max_length=64, unique=True, null=True, blank=True)
+    api_token_expires_at = models.DateTimeField(null=True, blank=True)
     name = models.CharField(max_length=50)
     email = models.EmailField(unique=True)
     image = models.ImageField(null=True, blank=True, upload_to="gallery_profile/")

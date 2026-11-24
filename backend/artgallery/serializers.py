@@ -62,10 +62,18 @@ class SignupSerializer(serializers.ModelSerializer):
         return value
 
     def create(self, validated_data):
+        from datetime import timedelta
+        from django.conf import settings
+        from django.utils import timezone
         from secrets import token_urlsafe
+        from .authentication import token_digest
         validated_data["password"] = make_password(validated_data["password"])
-        validated_data["api_token"] = token_urlsafe(32)
-        return Gallary.objects.create(**validated_data)
+        raw_token = token_urlsafe(32)
+        validated_data["api_token"] = token_digest(raw_token)
+        validated_data["api_token_expires_at"] = timezone.now() + timedelta(days=settings.GALLERY_SESSION_TTL_DAYS)
+        gallery = Gallary.objects.create(**validated_data)
+        gallery._issued_token = raw_token
+        return gallery
 
 
 class TargetFileSerializer(serializers.ModelSerializer):

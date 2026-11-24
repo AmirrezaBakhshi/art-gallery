@@ -4,12 +4,13 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 from artgallery.views import (
-    GalleryLoginView, GalleryLogoutView, GallerySignupView, GalleryView,
+    GalleryLoginView, GalleryLogoutView, GallerySignupView, GalleryView, GalleryCSRFView,
     ItemListView, ItemView, TargetFileListView, TargetFileView,
 )
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("api/auth/csrf/", GalleryCSRFView.as_view(), name="gallery-csrf"),
     path("api/auth/login/", GalleryLoginView.as_view(), name="gallery-login"),
     path("api/auth/logout/", GalleryLogoutView.as_view(), name="gallery-logout"),
     path("api/gallaries/", GallerySignupView.as_view(), name="gallery-list-create"),
