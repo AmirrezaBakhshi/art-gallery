@@ -152,7 +152,7 @@ class GalleryWorkflowE2E(unittest.TestCase):
         self.capture("06-gallery-library.png")
 
         self.page.goto(f"{BASE_URL}/iteminfo/0")
-        expect(self.page.get_by_text("Study in Form No. 01")).to_be_visible()
+        expect(self.page.get_by_text("E2E artwork")).to_be_visible()
         self.capture("07-public-artwork.png")
         self.page.get_by_role("button", name="view museum / gallary info").click()
         expect(self.page.get_by_text(gallery_name)).to_be_visible()
@@ -160,7 +160,7 @@ class GalleryWorkflowE2E(unittest.TestCase):
 
         self.page.goto(f"{BASE_URL}/dashboard")
         self.page.get_by_role("button", name="library").click()
-        self.page.get_by_text("Study in Form No. 01").click()
+        self.page.get_by_text("E2E artwork").click()
         expect(self.page).to_have_url(f"{BASE_URL}/editItem")
         self.page.get_by_placeholder("Title").fill("Updated art")
         self.page.get_by_role("button", name="Done").click()
