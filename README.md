@@ -6,9 +6,7 @@ The application is built with **React 18, Vite, Django 5.2, and Django REST Fram
 
 ## Visual showcase
 
-![ArtGallery walkthrough](docs/showcase/videos/artgallery-walkthrough.gif)
-
-[Browse application screenshots and the recorded walkthrough](docs/showcase/README.md).
+[Browse application screenshots and watch the recorded walkthrough](docs/showcase/README.md).
 
 ## Core capabilities
 
