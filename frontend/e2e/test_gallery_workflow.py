@@ -25,8 +25,8 @@ def wait_for(url, timeout=90):
     raise TimeoutError(f"Service did not become ready: {url}")
 
 
-def demo_image_bytes(size=(900, 1200)):
-    """Generate an original artwork image for repeatable demo runs."""
+def demo_image_bytes(size=(900, 1200), avatar=False):
+    """Generate original, deterministic sample imagery for the showcase."""
     width, height = size
     image = Image.new("RGB", size)
     pixels = image.load()
@@ -40,19 +40,23 @@ def demo_image_bytes(size=(900, 1200)):
             )
 
     draw = ImageDraw.Draw(image, "RGBA")
-    draw.ellipse((120, 210, 760, 850), fill=(217, 145, 92, 210))
-    draw.ellipse((245, 330, 650, 740), fill=(32, 52, 77, 230))
-    draw.polygon(
-        [(80, 930), (390, 500), (820, 1010), (760, 1130), (150, 1100)],
-        fill=(222, 190, 143, 225),
-    )
-    draw.arc((170, 250, 760, 940), 205, 510, fill=(246, 220, 178, 255), width=22)
-    draw.line((130, 1040, 770, 160), fill=(255, 255, 255, 115), width=8)
+    if avatar:
+        draw.ellipse((70, 70, width - 70, height - 70), fill=(218, 179, 125, 245))
+        draw.ellipse((145, 145, width - 145, height - 145), fill=(29, 42, 62, 255))
+        draw.arc((165, 165, width - 165, height - 165), 200, 520, fill=(232, 205, 160, 255), width=18)
+    else:
+        draw.ellipse((120, 210, 760, 850), fill=(217, 145, 92, 210))
+        draw.ellipse((245, 330, 650, 740), fill=(32, 52, 77, 230))
+        draw.polygon(
+            [(80, 930), (390, 500), (820, 1010), (760, 1130), (150, 1100)],
+            fill=(222, 190, 143, 225),
+        )
+        draw.arc((170, 250, 760, 940), 205, 510, fill=(246, 220, 178, 255), width=22)
+        draw.line((130, 1040, 770, 160), fill=(255, 255, 255, 115), width=8)
 
     output = io.BytesIO()
     image.save(output, format="PNG", optimize=True)
     return output.getvalue()
-
 
 class GalleryWorkflowE2E(unittest.TestCase):
     @classmethod
